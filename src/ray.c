@@ -12,14 +12,12 @@ const double pi = M_PI;
 
 //Data structure for julia callbacks
 struct juliafuncs_t {
-    void *rthunk;
-    double (*rfunc)(void *rthunk,double theta);
-    void *rsysthunk;
-    void (*rsys)(void *rsysthunk, double theta, double results[]);
-    void *nthunk;
-    double (*nfunc)(void *nthunk, double r, double theta);
-    void *nsysthunk;
-    void (*nsys)(void *nsysthunk, double r, double theta, double results[]);
+    void *bndthunk;
+    double (*rfunc)(void *bndthunk,double theta);
+    void (*rsys)(void *bndthunk, double theta, double results[]);
+    void *idxthunk;
+    double (*nfunc)(void *idxthunk, double r, double theta);
+    void (*nsys)(void *idxthunk, double r, double theta, double results[]);
 } jf;
 
 //=============================================================================
@@ -28,7 +26,7 @@ struct juliafuncs_t {
 //ODE derivatives function
 int func(double t, const double y[], double f[], void *params){
     double results[3];
-    (*jf.nsys)(jf.nsysthunk,y[0],y[1],results);
+    (*jf.nsys)(jf.idxthunk,y[0],y[1],results);
     
     //printf("n = %.5f, dr_n = %.5f, dtheta_n = %.5f\n",n,dr_n,dtheta_n);
     f[0] = y[2]/results[0]; //r' = p_r/n
@@ -61,7 +59,7 @@ double raybounce(double r0,double theta0, double S[]){
     do{
         xC = 0.5*(xA+xB); yC = 0.5*(yA+yB);
         rC = hypot(xC,yC); thetaC = atan2(yC,xC);
-        RC = (*jf.rfunc)(jf.rthunk,thetaC);
+        RC = (*jf.rfunc)(jf.bndthunk,thetaC);
         if(rC > RC){
             xB = xC; yB = yC;
         } else {
@@ -71,10 +69,10 @@ double raybounce(double r0,double theta0, double S[]){
 
     //Compute reflected ray
     double results[2];
-    (*jf.rsys)(jf.rsysthunk,thetaC,results);
+    (*jf.rsys)(jf.bndthunk,thetaC,results);
     double chi = fmod(atan2(yC-y0,xC-x0)-results[1],2*pi); //angle of incidence
     double phi = pi - chi + results[1]; //angle of reflected light to horizontal
-    double n = (*jf.nfunc)(jf.nthunk,rC,thetaC);
+    double n = (*jf.nfunc)(jf.idxthunk,rC,thetaC);
     double pr = n*cos(phi-thetaC);
     double ptheta = n*rC*sin(phi-thetaC);
     
@@ -88,26 +86,22 @@ double raybounce(double r0,double theta0, double S[]){
 
 //Ray traversal
 void rayevolve(
-    double raypath0[], double raypath1[], double bounces0[], double bounces1[],
-    double r0, double theta0, double pr0, double ptheta0,
-    double tmax, double reltol, double abstol,
-    void *rthunk,
-    double (*rfunc)(void *rthunk,double theta),
-    void *rsysthunk,
-    void (*rsys)(void *rsysthunk, double theta,double results[]),
-    void *nthunk,
-    double (*nfunc)(void *nthunk, double r, double theta), 
-    void *nsysthunk,
-    void (*nsys)(void *nsysthunk, double r, double theta,double results[])){
+    double raypath0[], double raypath1[], int bounces0[], double bounces1[],
+    int lengths[], double r0, double theta0, double pr0, double ptheta0,
+    double tmax, int bouncemax, double reltol, double abstol,
+    void *bndthunk,
+    double (*rfunc)(void *bndthunk,double theta),
+    void (*rsys)(void *bndthunk, double theta,double results[]),
+    void *idxthunk,
+    double (*nfunc)(void *idxthunk, double r, double theta),
+    void (*nsys)(void *idxthunk, double r, double theta,double results[])){
         
         //Condense input functions into juliafuncs_t struct
-        jf.rthunk = rthunk;
+        jf.bndthunk = bndthunk;
         jf.rfunc = rfunc;
-        jf.rsysthunk = rsysthunk;
         jf.rsys = rsys;
-        jf.nthunk = nthunk;
+        jf.idxthunk = idxthunk;
         jf.nfunc = nfunc;
-        jf.nsysthunk = nsysthunk;
         jf.nsys = nsys;
         
         //Initialize solver
@@ -122,11 +116,12 @@ void rayevolve(
         double y[4] = {r0,theta0,pr0,ptheta0};
         
         //Prepare results record
-        int bouncenum = 1, stepnum = 2, prealloc = 250*ceil(tmax);
-        raypath0[1] = y[0]; raypath1[1] = y[1];
+        int bouncenum = 0, stepnum = 1; //indicates postion to record next
+        const int prealloc = 250*ceil(tmax);
+        raypath0[0] = y[0]; raypath1[0] = y[1];
         
         //Solver loop
-        while(t < tmax && bouncenum < prealloc && stepnum < prealloc){
+        while(t < tmax && bouncenum < bouncemax && stepnum < prealloc){
             //Remember initial position
             double r0 = y[0], theta0 = y[1];
             
@@ -136,17 +131,18 @@ void rayevolve(
             
             //Check Hamiltonian
             if(stepnum%1000 == 0){
-                double H = y[2]*y[2]+y[3]*y[3]/(y[0]*y[0]) - gsl_pow_2((*jf.nfunc)(jf.nthunk,y[0],y[1]));
+                double H = y[2]*y[2]+y[3]*y[3]/(y[0]*y[0]) - gsl_pow_2((*jf.nfunc)(jf.idxthunk,y[0],y[1]));
                 if(H > 1e-9) printf("Warning: Error in Hamiltonian is %.f\n",H);
             }
             
             //Check for boundary crossing
-            double dr = y[0] - (*jf.rfunc)(jf.rthunk,y[1]);
+            double dr = y[0] - (*jf.rfunc)(jf.bndthunk,y[1]);
             if(dr > 0){
                 //get chi and alter y
                 bounces1[bouncenum] = raybounce(r0,theta0,y); 
-                //store index for thetaC first, will be replaced with thetaC value after Julia script computes condensed path information
-                bounces0[bouncenum] = stepnum; 
+                //store (Julia's 1-based) index for thetaC, thetaC values can be 
+                //obtained from raypath.
+                bounces0[bouncenum] = stepnum+1;
                 bouncenum += 1;
             }
             
@@ -158,7 +154,8 @@ void rayevolve(
             //printf("t = %.5f, y = [%.5f,%.5f,%.5f,%.5f]\n",t,y[0],y[1],y[2],y[3]);
             
         }
-        raypath0[0] = stepnum; bounces0[0] = bouncenum;
+        //Store lengths of arrays
+        lengths[0] = stepnum; lengths[1] = bouncenum;
         
         //Free memory
         gsl_odeiv2_step_free(step);
