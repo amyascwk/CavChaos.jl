@@ -2,14 +2,17 @@
 #define ray_h__
 
 extern void rayevolve(
-    double raypath0[], double raypath1[], int bounces0[], double bounces1[],
-    int lengths[], double r0, double theta0, double pr0, double ptheta0,
+    //Storage arrays
+    double raypath_r[], double raypath_theta[], int bounces_indices[],
+    double bounces_chi[], int lengths[],
+    //Initial conditions
+    double r0, double theta0, double pr0, double ptheta0,
+    //Simulation parameters
     double tmax, int bouncemax, double reltol, double abstol,
-    void *bndthunk,
-    double (*rfunc)(void *bndthunk,double theta),
-    void (*rsys)(void *bndthunk, double theta,double results[]),
-    void *idxthunk,
-    double (*nfunc)(void *idxthunk, double r, double theta),
-    void (*nsys)(void *idxthunk, double r, double theta,double results[]));
+    //Cavity parameters
+    void *bnd, double (*rfunc_p)(void *bnd,double theta),
+    void (*rsys_p)(void *bnd, double theta,double results[]),
+    void *idx, double (*nfunc_p)(void *idx, double r, double theta),
+    void (*nderiv_p)(void *idx, double r, double theta,double results[]));
 
 #endif
