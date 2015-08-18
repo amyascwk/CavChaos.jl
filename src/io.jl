@@ -72,7 +72,7 @@ function getresultsdir(run_params_hash::Uint64,bnd::Boundary,idx::RefractiveInde
     return resultsdir
 end
 
-#Get result filename from label
+#Get result filename from label (without extension)
 function getresultfname(resultid::Int64,label::String)
     if resultid == 0
         return label

@@ -116,12 +116,12 @@ double raybounce(cavinfo *cip, double S0[], double S[]){
 //Ray evolution
 void rayevolve(
     //Storage arrays
-    double raypath_r[], double raypath_theta[], int bounces_indices[],
-    double bounces_chi[], int lengths[],
+    double raypath_r[], double raypath_theta[], long bounceindices[],
+    double bouncepts_chi[], long lengths[],
     //Initial conditions
     double r0, double theta0, double pr0, double ptheta0,
     //Simulation parameters
-    double tmax, int bouncemax, double reltol, double abstol,
+    double tmax, long bouncemax, double reltol, double abstol,
     //Cavity parameters
     void *bnd, double (*rfunc_p)(void *bnd,double theta),
     void (*rsys_p)(void *bnd, double theta,double results[]),
@@ -143,8 +143,8 @@ void rayevolve(
         double y0[4], y[4] = {r0,theta0,pr0,ptheta0};
         
         //Prepare results record
-        int bouncenum = 0, stepnum = 1; //indicates postion to record next
-        const int prealloc = 250*ceil(tmax); //length of preallocated raypath array
+        long bouncenum = 0, stepnum = 1; //indicates postion to record next
+        const long prealloc = 250*ceil(tmax); //length of preallocated raypath array
         raypath_r[0] = y[0]; raypath_theta[0] = y[1];
         
         //Solver loop
@@ -168,10 +168,10 @@ void rayevolve(
             if(dr > 0){
                 //Boundary crossing!
                 //get chi and corrected y
-                bounces_chi[bouncenum] = raybounce(&ci,y0,y);
+                bouncepts_chi[bouncenum] = raybounce(&ci,y0,y);
                 //store (Julia's 1-based) index for thetaC values recorded in 
                 //raypath_theta array
-                bounces_indices[bouncenum] = stepnum+1;
+                bounceindices[bouncenum] = stepnum+1;
                 bouncenum += 1;
             }
             

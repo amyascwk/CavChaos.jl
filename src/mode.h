@@ -3,11 +3,11 @@
 
 extern void findmode(
     //mode-specific variables
-    int order, double modebounces[],
+    long order, double modebounces[],
     //initial position on PSS
     double theta0, double sinchi0,
     //root-finding algorithm parameters
-    double rtol, int maxiter,
+    double rtol, long maxiter,
     //Cavity parameters
     void *bnd, double (*rfunc_p)(void *bnd,double theta),
     void (*rsys_p)(void *bnd, double theta,double results[]),

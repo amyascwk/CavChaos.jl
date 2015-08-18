@@ -45,24 +45,24 @@ function getpathintegrals(raypath::Array{Float64,2},idx::RefractiveIndex)
 end
 
 #Calculates the path integrals for specified segments
-function getpathintegrals(raypath::Array{Float64,2},idx::RefractiveIndex,bounce_indices::Array{Int32,1})
+function getpathintegrals(raypath::Array{Float64,2},idx::RefractiveIndex,bounceindices::Array{Int64,1})
     #Initiate arrays
-    bouncenum::Int64 = length(bounce_indices)
+    bouncenum::Int64 = length(bounceindices)
     pathlengths::Array{Float64,1} = Array(Float64,bouncenum+1)
     actions::Array{Float64,1} = Array(Float64,bouncenum+1)
     
     #Start segment (before 1st bounce)
-    pathlengths[1],actions[1] = getpathintegrals(raypath[1:bounce_indices[1],:],idx)
+    pathlengths[1],actions[1] = getpathintegrals(raypath[1:bounceindices[1],:],idx)
     
     #Middle segment (between consecutive bounces)
     for i = 2:bouncenum
         pathlengths[i],actions[i] = 
-            getpathintegrals(raypath[bounce_indices[i-1]:bounce_indices[i],:],idx)
+            getpathintegrals(raypath[bounceindices[i-1]:bounceindices[i],:],idx)
     end
     
     #End segment (after last bounce)
     pathlengths[bouncenum+1],actions[bouncenum+1] =
-        getpathintegrals(raypath[bounce_indices[end]:end,:],idx)
+        getpathintegrals(raypath[bounceindices[end]:end,:],idx)
     
     return pathlengths,actions
 end

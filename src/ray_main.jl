@@ -6,7 +6,7 @@
 
 #   shell-prompt> julia -p <num of parallel procs> <ctrlfile>
 
-#and start with the declaration
+#The file starts with the declaration
 
 #   @everywhere using CavChaos
 
@@ -363,8 +363,8 @@ function runcavity()
             
             #Run ray tracer
             (raypath::Array{Float64,2},
-             bounce_indices::Array{Int32,1},
-             bounce_points::Array{Float64,2}) = 
+             bounceindices::Array{Int64,1},
+             bouncepoints::Array{Float64,2}) = 
                 rayevolve_gsl(
                     get_cavity_bnd(), get_cavity_idx(),
                     get_initcond(resultid);
@@ -377,7 +377,7 @@ function runcavity()
             if get_results(:pathlengths) || get_results(:actions)
                 #Compute 
                 pathlengths,actions = 
-                    getpathintegrals(raypath,get_cavity_idx(),bounce_indices)
+                    getpathintegrals(raypath,get_cavity_idx(),bounceindices)
             end
             
             #Write results
@@ -389,7 +389,7 @@ function runcavity()
                 writeresults(resultsdir,resultid,"raypath",raypath)
             end
             if get_results(:bounceindices)
-                writeresults(resultsdir,resultid,"bounceindices",bounce_indices)
+                writeresults(resultsdir,resultid,"bounceindices",bounceindices)
             end
             if get_results(:rayimage)
                 if rayline == nothing
@@ -399,7 +399,7 @@ function runcavity()
                 end
             end
             if get_results(:bouncepoints)
-                writeresults(resultsdir,resultid,"bouncepoints",bounce_points)
+                writeresults(resultsdir,resultid,"bouncepoints",bouncepoints)
             end
             if get_results(:pathlengths)
                 writeresults(resultsdir,resultid,"pathlengths",pathlengths)

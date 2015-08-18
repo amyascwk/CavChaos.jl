@@ -4,10 +4,10 @@
 
 #This file contains the Julia wrappers and functions for running the internal solvers written in C (using the GSL library). The following Julia function is provided for the ray solver:
 
-#   raypath,bounce_indices,bounce_points = rayevolve_gsl(bnd::Boundary, idx::RefractiveIndex,init::Array{Float64,1};tmax::Float64=200.0,bouncemax::Int64=500,reltol::Float64=1.0e-12,abstol::Float64=1.0e-12)
+#   raypath,bounceindices,bouncepoints = rayevolve_gsl(bnd::Boundary, idx::RefractiveIndex,init::Array{Float64,1};tmax::Float64=200.0,bouncemax::Int64=500,reltol::Float64=1.0e-12,abstol::Float64=1.0e-12)
 #   Computes the trajectory and bounce points in a cavity with boundary <bnd> and index distribution <idx>, of a ray with initial conditions <init>, which is an array of initial (<r>,<theta>,<phi>) or (radial position, angular position, angle of propagation) values or the ray. Runs the ODE solver with relative and absolute tolerances <reltol> and <abstol> (default 1.0e-12 each), and halts computation when pathlength reaches <tmax> (default 200.0) or number of bounces reaches <bouncemax> (default 500).
-#   Returns the 2D array <raypath> of (<r>,<theta>) positions traversed in the ray's path as its rows, the 1D array <bounces_indices> of row indices in <raypath> that bounces occur, and the 2D array <bounce_points> with the (<theta>,<chi>) or (angular position,angle of incidence) values of each bounce as its rows.
-#   This means that <raypath>[<bounces_indices>,2] == <bounce_points>[:,1].
+#   Returns the 2D array <raypath> of (<r>,<theta>) positions traversed in the ray's path as its rows, the 1D array <bouncesindices> of row indices in <raypath> that bounces occur, and the 2D array <bouncepoints> with the (<theta>,sin(<chi>)) or (angular position,sin(angle of incidence)) values of each bounce as its rows.
+#   This means that <raypath>[<bouncesindices>,2] == <bouncepoints>[:,1].
 
 
 # #############################################################################
@@ -81,33 +81,41 @@ function rayevolve_gsl(bnd::Boundary,idx::RefractiveIndex,init::Array{Float64,1}
     #Initialize arrays for the 1st and 2nd columns of the bounce information matrix 
     #storing the corresponding row of the raypath array and angle of incidence (chi) 
     #values in each row
-    bounce_indices::Array{Int32,1} = Array(Int32,bouncemax) #bounce indices
-    bounces_chi::Array{Float64,1} = Array(Float64,bouncemax) #bounce chi value
+    bounceindices::Array{Int64,1} = Array(Int64,bouncemax) #bounce indices
+    bouncepts_chi::Array{Float64,1} = Array(Float64,bouncemax) #bounce chi value
     #Record actual number of rows of the raypath and bounces arrays here
-    lengths::Array{Int32,1} = Array(Int32,2)
+    lengths::Array{Int64,1} = Array(Int64,2)
     
     #Make C call --------------------------------------------------------------
     ccall((:rayevolve,"../lib/libcavchaos.so"), Void,
         #Tuple of argument types
-        (Ptr{Cdouble},Ptr{Cdouble},Ptr{Cint},Ptr{Cdouble},Ptr{Cint},
+        (Ptr{Cdouble},Ptr{Cdouble},Ptr{Clong},Ptr{Cdouble},Ptr{Clong},
          Cdouble,Cdouble,Cdouble,Cdouble,
          Cdouble,Cint,Cdouble,Cdouble,
          Any,Ptr{Void},Ptr{Void},Any,Ptr{Void},Ptr{Void}),
         #Argument values
-        raypath_r,raypath_theta,bounce_indices,bounces_chi,lengths, #Storage arrays
+        raypath_r,raypath_theta,bounceindices,bouncepts_chi,lengths, #Storage arrays
         init[1],init[2],pr0,ptheta0, #Initial conditions
-        tmax,int32(bouncemax),reltol,abstol, #Simulation parameters
+        tmax,bouncemax,reltol,abstol, #Simulation parameters
         bnd,rfunc_p,rsys!_p,idx,nfunc_p,nderiv!_p) #Cavity parameters
     
-    #Truncate allocated arrays for output
-    resize!(raypath_r,lengths[1])
-    resize!(raypath_theta,lengths[1])
-    resize!(bounce_indices,lengths[2])
-    resize!(bounces_chi,lengths[2])
+    #Truncate or extract data from allocated arrays for output
+    #raypath position array
+    raypath::Array{Float64,2} = Array(Float64,lengths[1],2)
+    for i=1:lengths[1]
+        raypath[i,1] = raypath_r[i]
+        raypath[i,2] = raypath_theta[i]
+    end
+    #bounce points
+    bouncepoints::Array{Float64,2} = Array(Float64,lengths[2],2)
+    for i=1:lengths[2]
+        bouncepoints[i,1] = raypath_theta[bounceindices[i]]
+        bouncepoints[i,2] = sin(bouncepts_chi[i])
+    end
+    #indices in raypath corresponding to bounces
+    resize!(bounceindices,lengths[2])
     
-    #Return (raypath, bounce_indices, bounce_points), where the rows of raypath are the (r,theta) positions along the ray's path, bounce_indices contains the indices of raypath that bounces occur, and the rows of bounce_points are the (theta,chi) values of each bounce
-    return ([raypath_r raypath_theta]::Array{Float64,2}, #raypath position array
-        bounce_indices::Array{Int32,1}, #indices in raypath corresponding to bounces
-        [raypath_theta[bounce_indices] bounces_chi]::Array{Float64,2}) #bounce points
+    #Return (raypath, bounceindices, bouncepoints), where the rows of raypath are the (r,theta) positions along the ray's path, bounceindices contains the indices of raypath that bounces occur, and the rows of bouncepoints are the (theta,sin(chi)) values of each bounce
+    return (raypath, bounceindices, bouncepoints)
     
 end

@@ -29,15 +29,15 @@ typedef struct {
     void (*nderiv_p)(void *idx, double r, double theta, double results[]);
     
     //mode-specific parameters ------------------------------------------------
-    int order; //number of bounces in a period
+    long order; //number of bounces in a period
     double rtol; //stopping criterion tolerance
     
     //preallocated arrays -----------------------------------------------------
     double *raypath_r;
     double *raypath_theta;
-    int *bounces_indices;
-    double *bounces_chi;
-    int *lengths;
+    long *bounceindices;
+    double *bouncepts_chi;
+    long *lengths;
     double *modebounces;
 } modeinfo;
 
@@ -49,12 +49,12 @@ int rootfunc(const gsl_vector *x, void *params, gsl_vector *f){
     //params is pointer to modeinfo struct containing both cavity info and 
     //simulation parameters
     modeinfo *mip = (modeinfo *)params;
-    const int order = (*mip).order;
+    const long order = (*mip).order;
     double *raypath_r = (double *)(*mip).raypath_r;
     double *raypath_theta = (double *)(*mip).raypath_theta;
-    int *bounces_indices = (int *)(*mip).bounces_indices;
-    double *bounces_chi = (double *)(*mip).bounces_chi;
-    int *lengths = (int *)(*mip).lengths;
+    long *bounceindices = (long *)(*mip).bounceindices;
+    double *bouncepts_chi = (double *)(*mip).bouncepts_chi;
+    long *lengths = (long *)(*mip).lengths;
     
     //Extract initial condition data (print for debugging)
     const double theta0 = gsl_vector_get(x,0), chi0 = gsl_vector_get(x,1);
@@ -78,7 +78,7 @@ int rootfunc(const gsl_vector *x, void *params, gsl_vector *f){
     //Compute ray
     rayevolve(
         //Storage arrays
-        raypath_r,raypath_theta,bounces_indices,bounces_chi,lengths,
+        raypath_r,raypath_theta,bounceindices,bouncepts_chi,lengths,
         //Initial conditions
         results[0],theta0,pr0,ptheta0,
         //Simulation parameters
@@ -88,11 +88,11 @@ int rootfunc(const gsl_vector *x, void *params, gsl_vector *f){
         (*mip).idx,(*mip).nfunc_p,(*mip).nderiv_p);
     
     //Store difference in initial and final bounce locations (print for debugging)
-    const double dtheta = fmod(raypath_theta[bounces_indices[order]-1] - raypath_theta[bounces_indices[0]-1] + pi, 2*pi) - pi;
-    //Equivalent to sin(bounces_chi[order]) - sin(bounces_chi[0]);
+    const double dtheta = fmod(raypath_theta[bounceindices[order]-1] - raypath_theta[bounceindices[0]-1] + pi, 2*pi) - pi;
+    //Equivalent to sin(bouncepts_chi[order]) - sin(bouncepts_chi[0]);
     //but more accurate for small differences
-    const double dsinchi = 2*sin(0.5*(bounces_chi[order]-bounces_chi[0]))*
-        cos(0.5*(bounces_chi[order]+bounces_chi[0]));
+    const double dsinchi = 2*sin(0.5*(bouncepts_chi[order]-bouncepts_chi[0]))*
+        cos(0.5*(bouncepts_chi[order]+bouncepts_chi[0]));
     gsl_vector_set(f,0,dtheta/pi);
     gsl_vector_set(f,1,dsinchi);
     //printf("dtheta = %.8f, dsinchi = %.8f\n",dtheta,dsinchi);
@@ -105,8 +105,8 @@ int rootfunc(const gsl_vector *x, void *params, gsl_vector *f){
         //sinchi values stored in second half of array (second column after reshaping)
         int i;
         for(i=0; i<order; i+=1){
-            modebounces[i] = raypath_theta[bounces_indices[i]-1];
-            modebounces[order+i] = sin(bounces_chi[i]);
+            modebounces[i] = raypath_theta[bounceindices[i]-1];
+            modebounces[order+i] = sin(bouncepts_chi[i]);
         }
     }
     
@@ -118,11 +118,11 @@ int rootfunc(const gsl_vector *x, void *params, gsl_vector *f){
 //Solver function
 int findmode(
     //mode-specific variables
-    int order, double modebounces[],
+    long order, double modebounces[],
     //initial position on PSS
     double theta0, double sinchi0,
     //root-finding algorithm parameters
-    double rtol, int maxiter,
+    double rtol, long maxiter,
     //Cavity parameters
     void *bnd, double (*rfunc_p)(void *bnd,double theta),
     void (*rsys_p)(void *bnd, double theta,double results[]),
@@ -130,12 +130,12 @@ int findmode(
     void (*nderiv_p)(void *idx, double r, double theta,double results[])){
         
         //Preallocate arrays for reuse
-        int bounces_indices[30], lengths[2];
-        double raypath_r[50000],raypath_theta[50000],bounces_chi[30];
+        long bounceindices[30], lengths[2];
+        double raypath_r[50000],raypath_theta[50000],bouncepts_chi[30];
         
         //Condense input mode data into modeinfo structs
         modeinfo mi = {bnd,rfunc_p,rsys_p,idx,nfunc_p,nderiv_p,order,rtol,
-            raypath_r,raypath_theta,bounces_indices,bounces_chi,lengths,modebounces};
+            raypath_r,raypath_theta,bounceindices,bouncepts_chi,lengths,modebounces};
         
         //Store initial guess
         gsl_vector *x0 = gsl_vector_alloc(2);

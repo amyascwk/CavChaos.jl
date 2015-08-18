@@ -36,14 +36,14 @@ function findmode_gsl(bnd::Boundary,idx::RefractiveIndex,init::Array{Float64,1},
     #Make C call
     status::Int32 = ccall((:findmode,"../lib/libcavchaos.so"), Cint,
         #Tuple of argument types
-        (Cint,Ptr{Cdouble},
+        (Clong,Ptr{Cdouble},
          Cdouble,Cdouble,
-         Cdouble,Cint,
+         Cdouble,Clong,
          Any,Ptr{Void},Ptr{Void},Any,Ptr{Void},Ptr{Void}),
         #Argument values
-        int32(order),modebounces, #mode-specific variables
+        order,modebounces, #mode-specific variables
         init[1],init[2], #initial conditions
-        rtol,int32(maxiter), #root-finding algorithm parameters
+        rtol,maxiter, #root-finding algorithm parameters
         bnd,rfunc_p,rsys!_p,idx,nfunc_p,nderiv!_p) #Cavity parameters
     
     #Return NaN on abortions or false positives (almost identical points at high sinchi)
