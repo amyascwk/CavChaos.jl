@@ -12,7 +12,7 @@
 
 #to initiate the module's methods into the namespace on every process. The following functions can then be used in a control file to set up a simulation run:
 
-#=> Cavity properties
+#>> Cavity properties
 
 #   set_cavity_bnd(bnd::Boundary)
 #   Sets the desired cavity boundary to <bnd>.
@@ -26,7 +26,7 @@
 #   idx = get_cavity_idx()
 #   Returns the current cavity index distribution.
 
-#=> Solver parameters
+#>> Solver parameters
 
 #   set_solver_params(;kwargs...)
 #   Sets the solver parameter represented by keywords to the numerical value associated to it in <kwargs>. Appropriate keywords are: maxpathlength, maxbounces, relativetolerance, absolutetolerance.
@@ -34,7 +34,7 @@
 #   value = get_solver_param(key::Union(String,Symbol))
 #   Returns the current value of the solver parameter represented by the symbol or string <key>.
 
-#=> Initial conditions
+#>> Initial conditions
 
 #   set_init_params(;kwargs...)
 #   Sets the initial conditions autogeneration parameter represented by keywords to the numerical value associated to it in <kwargs>. Appropriate keywords are: symmetry, thetares, sinchires, deviation.
@@ -57,7 +57,7 @@
 #   initcond = get_initcond(resultid::Int64)
 #   Returns the <resultid>th set <initcond> of (r,theta,phi)-based initial conditions, as a 1D array.
 
-#=> Results to record
+#>> Results to record
 
 #   set_results(;kwargs...)
 #   Sets the result represented by keywords to a boolean value associated to it in <kwargs>, indicating whether that result will be recorded. Appropriate keywords are: pssinitarray, initarray, initialconditions, raypath, bounceindices, bouncepoints, cavityimage, rayimage, pathlengths, actions, modeproperties, farfield.

@@ -89,10 +89,10 @@ end
 #Write results for different types of data, with specified associated labels
 #Data labels should not include '_' or '.', since these are used as separators of multiple data
 
-#=> Do nothing in empty case
+#>> Do nothing in empty case
 writeresults(resultsdir::String,resultid::Int64) = nothing
 
-#=> Write arrays directly
+#>> Write arrays directly
 function writeresults{T}(resultsdir::String,resultid::Int64,label::String,data::Union(Array{T,1},Array{T,2}),args...)
     #single csv file suffices for 1D or 2D arrays
     resultfile::String = joinpath(resultsdir,getresultfname(resultid,label)*".dat")
@@ -121,8 +121,8 @@ function writeresults{T,N}(resultsdir::String,resultid::Int64,label::String,data
     writeresults(resultsdir,resultid,args...)
 end
 
-#=> Combine non-arrays into a single file
-#=> (assumes that all data arguments are non-arrays)
+#>> Combine non-arrays into a single file
+#   (assumes that all data arguments are non-arrays)
 function writeresults(resultsdir::String,resultid::Int64,args...)
     data_array::Array{Any,1} = [args[2:2:]...]
     for item in data_array
@@ -174,7 +174,7 @@ function readresults(resultsdir::String,resultid::Int64,label::String,T::Type=Fl
     error("The data associated to the label $label cannot be found for run ID $resultid in $resultsdir.")
 end
 
-#=> Read an N-dimensional array with N>2 from a directory
+#>> Read an N-dimensional array with N>2 from a directory
 function readNdimcsv(resultpath::String,T::Type=Float64)
     if isfile(resultpath)
         return readcsv(resultpath,T)
