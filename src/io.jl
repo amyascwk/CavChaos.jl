@@ -4,11 +4,11 @@
 
 #This file contains functions for recording and reading the results of computations.
 
-#   resultsdir = getresultsdir(simulation_params_hash::String,bnd::Boundary,idx::RefractiveIndex)
-#   Returns the (relative) path <resultsdir> to the uniquely assigned directory location for storing results of the simulation with parameters represented by the hash <simulation_params_hash>, for the cavity with boundary <bnd> and index distribution <idx>. Makes nonexisting directories via mkdir() whenever appropriate.
+#   resultsdir = getresultsdir(simulation_params_hash::String,bnd::Boundary,idx::RefractiveIndex,resultsroot::String=".")
+#   Returns the path <resultsdir> (as a subdirectory of <resultsroot>) to the uniquely assigned directory location for storing results of the simulation with parameters represented by the hash <simulation_params_hash>, for the cavity with boundary <bnd> and index distribution <idx>. Makes nonexisting directories via mkdir() whenever appropriate.
 
 #   writeresults(resultsdir::String,resultid::Int64, [label1::String,data1,[label2::String,data2,[...]]])
-#   Writes the results corresponding to the <resultid>th computation of a specified simulation run, into files at the directory location <resultsdir>. For each label-data pair (<label>,<data>) in the variable argument list, the data are stored in appropriate formats (csv files) depending on their type, and systematically associated with their corresponding labels for later retrieval.
+#   Writes the results corresponding to the <resultid>th computation of a specified simulation run, into files at the directory location <resultsdir> (as a subdirectory of <resultsroot>). For each label-data pair (<label>,<data>) in the variable argument list, the data are stored in appropriate formats (csv files) depending on their type, and systematically associated with their corresponding labels for later retrieval.
 #   If multiple label-data argument pairs are present, either the data must all be of array-type, which are then each stored in individual files, or the data must all NOT be of array-type, and they are combined into a single file and identified by their position in the order. This is to reduce the clutter of multiple result files with only a single value stored in each.
 
 #   data = readresults(resultsdir::String,resultid::Int64,label::String, T::Type=Float64)
@@ -48,9 +48,9 @@ end
 
 #Get cavity-specific directory
 #Results directory is one more level deeper, separated by specific control file
-function getcavitydir(bnd::Boundary,idx::RefractiveIndex)
+function getcavitydir(bnd::Boundary,idx::RefractiveIndex,resultsroot::String=".")
     #Initiate cavity directory as module root directory
-    cavitydir::String = ".."
+    cavitydir::String = resultsroot
     #Get cavity constructor names
     cavitytype::String = @sprintf("%s_%s",summary(bnd),summary(idx))
     #Get hash of specific cavity with parameters
@@ -64,9 +64,9 @@ function getcavitydir(bnd::Boundary,idx::RefractiveIndex)
 end
 
 #Get run-specific directory
-function getresultsdir(run_params_hash::Uint64,bnd::Boundary,idx::RefractiveIndex)
+function getresultsdir(run_params_hash::Uint64,bnd::Boundary,idx::RefractiveIndex,resultsroot::String=".")
     #Get directory name
-    resultsdir::String = joinpath(getcavitydir(bnd,idx),"run"*dec2base64(run_params_hash))
+    resultsdir::String = joinpath(getcavitydir(bnd,idx,resultsroot),"run"*dec2base64(run_params_hash))
     #Make directory
     if !isdir(resultsdir); mkdir(resultsdir); end
     return resultsdir

@@ -56,6 +56,12 @@
 
 #>> Results to record
 
+#   set_resultsroot(dir::String)
+#   Sets the results root directory (in which a "results" subdirectory stores all output data) to <dir>.
+
+#   get_resultsroot()
+#   Returns the results root directory.
+
 #   set_results(;kwargs...)
 #   Sets the result represented by keywords to a boolean value associated to it in <kwargs>, indicating whether that result will be recorded. Appropriate keywords are: pssinitarray, initarray, initialconditions, raypath, bounceindices, bouncepoints, cavityimage, rayimage, pathlengths, actions, modeproperties, farfield.
 

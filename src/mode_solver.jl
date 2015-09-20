@@ -34,7 +34,7 @@ function findmode_gsl(bnd::Boundary,idx::RefractiveIndex,init::Array{Float64,1},
     modebounces::Array{Float64,1} = Array(Float64,2*order)
     
     #Make C call
-    status::Int32 = ccall((:findmode,"../lib/libcavchaos.so"), Cint,
+    status::Int32 = ccall((:findmode,"libcavchaos.so"), Cint,
         #Tuple of argument types
         (Clong,Ptr{Cdouble},
          Cdouble,Cdouble,

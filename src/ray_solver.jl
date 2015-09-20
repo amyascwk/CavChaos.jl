@@ -87,7 +87,7 @@ function rayevolve_gsl(bnd::Boundary,idx::RefractiveIndex,init::Array{Float64,1}
     lengths::Array{Int64,1} = Array(Int64,2)
     
     #Make C call --------------------------------------------------------------
-    ccall((:rayevolve,"../lib/libcavchaos.so"), Void,
+    ccall((:rayevolve,"libcavchaos.so"), Void,
         #Tuple of argument types
         (Ptr{Cdouble},Ptr{Cdouble},Ptr{Clong},Ptr{Cdouble},Ptr{Clong},
          Cdouble,Cdouble,Cdouble,Cdouble,

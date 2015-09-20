@@ -162,7 +162,7 @@ function run_rays(  #Cavity parameters
     run_params[3] = Bool[record_cavityimage,record_pssinitarray,record_initarray,record_initialconditions,record_raypath,record_bounceindices,record_bouncepoints,record_cavityimage,record_rayimage,record_pathlengths,record_actions,record_modeproperties,record_farfield]
     
     #Get results directory
-    const resultsdir::String = getresultsdir(hash(run_params),bnd,idx)
+    const resultsdir::String = getresultsdir(hash(run_params),bnd,idx,resultsroot)
     
     #Write cavity image and get plot range
     if record_cavityimage
