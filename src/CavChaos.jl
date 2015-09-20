@@ -47,8 +47,12 @@ module CavChaos
     export getcavityimgfile, getrayimgfile
     export writecavityimg, writerayimg
     
-    #Main functions
-    include("ray_main.jl")
+    #Combined ray simulation
+    include("ray_combined.jl")
+    export run_rays
+    
+    #Main single-cavity analysis functions
+    include("run_cavity.jl")
     export set_cavity_bnd, get_cavity_bnd, set_cavity_idx, get_cavity_idx
     export set_simulation_params, get_simulation_param
     export set_init_params, get_init_param
