@@ -169,7 +169,9 @@ function run_rays(  #Cavity parameters
         range::Array{Float64,1} = writecavityimg(resultsdir,bnd,idx)
     else
         #Set plot range to default
-        range = [-1,-1,1,1]
+        cavityplot = prepareplot()
+        plotbnd(bnd,axes=cavityplot)
+        range = [plt.axis()...]
     end
     #Initialize ray plot line object to nothing
     rayline = nothing

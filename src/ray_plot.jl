@@ -49,6 +49,13 @@ using PyCall
 # #############################################################################
 #Plotting tools
 
+#Common preparation of empty plot for cavity and ray plotting functions
+function prepareplot()
+    ax = plt.figure(figsize=(5,5))[:gca](aspect="equal")
+    plt.gcf()[:tight_layout]()
+    return ax
+end
+
 #Plot the boundary
 function plotbnd(bnd::Boundary;axes=plt.gca(),normvec::Bool=false)
     #Plots a boundary, with the option of showing its normal vectors as red emanating lines.
@@ -132,12 +139,11 @@ end
 #Attempts to store image of cavity if not already present. Returns the axis range of the cavity.
 function writecavityimg(resultsdir::String,bnd::Boundary,idx::RefractiveIndex)
     #Create new figure
-    cavityplot = plt.figure(figsize=(5,5))[:gca](aspect="equal")
+    cavityplot = prepareplot()
     
     #Plot boundary to obtain axis range
     plotbnd(bnd,axes=cavityplot)
-    plt.gcf()[:tight_layout]()
-    range = plt.axis()
+    range = [plt.axis()...]
     
     #Continue plotting if cavity image file does not already exist
     cavityimgfile = getcavityimgfile(resultsdir)
@@ -148,18 +154,17 @@ function writecavityimg(resultsdir::String,bnd::Boundary,idx::RefractiveIndex)
     end
     
     plt.close()
-    return [range...]
+    return range
 end
 
 #Stores newly created image of ray and returns the matplotlib line object of the ray plot for more efficient future editing.
 function writerayimg(resultsdir::String,resultid::Int64,raypath::Array{Float64,2},range::Array{Float64,1}=[-1.0,1.0,-1.0,1.0])
     #Create new figure
-    rayplot = plt.figure(figsize=(5,5))[:gca](aspect="equal")
+    rayplot = prepareplot()
     
     #Plot
     rayline = plotrays(raypath,axes=rayplot)
     plt.axis(range)
-    plt.gcf()[:tight_layout]()
     plt.axis("off")
     
     #Save image
