@@ -49,7 +49,7 @@ module CavChaos
     
     #Combined ray simulation
     include("ray_combined.jl")
-    export run_rays
+    export run_rays, gen_pssinitarray, gen_initarray
     
     #Control file interface for single cavity run
     include("run_cavity.jl")

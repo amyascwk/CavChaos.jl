@@ -20,8 +20,6 @@
 #       number of theta values to sample
 #   sinchires::Int64= 25
 #       number of sinchi values to sample
-#   deviation::Int64 = 13
-#       TODO: clearer documentation on this
 #   
 #>> Solver parameters
 #   maxpathlength::Float64 = 200.0
@@ -72,18 +70,29 @@
 #Initial conditions generation
 
 #Use PSS-spanning initial conditions
-#Automatically generates an array of (theta,sinchi) pairs as rows, that covers as much of the Poincare Surface of Section plot up to a specified rotational symmetry. The points form a lattice that is "slanted" in order to maximize the density of sinchi values.
-#TODO: Needs clearer documentation!
-function gen_pssinitarray(thetares::Int64=25,sinchires::Int64=25,deviation::Int64=13,symmetry::Int64=1)
-    #Setup initial conditions
-    theta0::Array{Float64,1} = linspace(0,2*pi/symmetry,thetares+1)[1:end-1]
-    sinchi0::Array{Float64,1} = linspace(0,1,sinchires+3)[1:end-3]
-    offset::Array{Float64,1} = linspace(0,sinchi0[deviation],thetares+1)[1:end-1]
+#Automatically generates an array of (theta,sinchi) pairs as rows, that covers as much of the Poincare Surface of Section plot up to a specified rotational symmetry.
+function gen_pssinitarray(thetares::Int64=25,sinchires::Int64=25,symmetry::Int64=1)
+    #Choose total number of points (see explanation below)
+    interval::Int64 = int64(ceil(sqrt(thetares*sinchires)))
+    N::Int64 = interval^2+3
+    while gcd(interval,N) != 1
+        N += 1
+    end
     
-    theta0val::Array{Float64,2} = ones(Float64,sinchires)*transpose(theta0)
-    sinchi0val::Array{Float64,2} = mod(sinchi0*ones(Float64,1,thetares) + ones(Float64,sinchires)*transpose(offset),sinchi0[end]+sinchi0[2]) + sinchi0[2]
+    #Avoid repetition of values by generating N values of theta and N value of 
+    #sinchi, then permute them relative to each other so that theta and sinchi values 
+    #are matched to form points on a lattice spanning the PSS.
+    #generate theta values spanning angle up to cavity rotational symmetry
+    theta::Array{Float64,1} = linspace(0,2*pi/symmetry,N+1)[1:N]
+    #generate sinchi values excluding 0 and 1
+    sinchi::Array{Float64,1} = linspace(0,1,N+2)[2:N+1]
     
-    return [theta0val[:] sinchi0val[:]]
+    #In order to generate a lattice that is as evenly spread out as possible, can do 
+    #this by stepping through appropriate intervals in mod <N>. By having N be in the 
+    #form M^2 + P, where gcd(M,P) = 1, P < M, then lattice is fairly even with the P 
+    #smallest values spread out as much as possible, in order to sample the low 
+    #sinchi behavior at P points.
+    return [theta sinchi[1+mod([(interval*(0:N-1))...],N)]]::Array{Float64,2}
 end
 
 #Converts a (theta,sinchi)-based set initial conditions to a (r,theta,phi)-based one
@@ -93,14 +102,20 @@ function pss2raycoord(bnd::Boundary,theta::Float64,sinchi::Float64)
     return (r,theta,phi)
 end
 
-#Generates the (r,theta,phi)-based initial conditions array from a given (theta,sinchi)-based array.
-function gen_initarray(bnd::Boundary,pssinitarray::Array{Float64,2})
+#Converts a (r,theta,phi)-based initial conditions array from a given (theta,sinchi)-based array.
+function pss2initarray(bnd::Boundary,pssinitarray::Array{Float64,2})
     count::Int64 = size(pssinitarray,1)
     initA::Array{Float64,2} = Array(Float64,count,3)
     for i=1:count
         initA[i,1],initA[i,2],initA[i,3] = pss2raycoord(bnd,pssinitarray[i,1],pssinitarray[i,2])
     end
     return initA
+end
+
+#Automatically generates an array of (r,theta,phi) as rows, that covers as much of the Poincare Surface of Section plot up to a specified rotational symmetry.
+function gen_initarray(bnd::Boundary,thetares::Int64=25,sinchires::Int64=25,symmetry::Int64=1)
+    pssinitarray::Array{Float64,2} = gen_pssinitarray(thetares,sinchires,symmetry)
+    return pss2initarray(bnd,pssinitarray)
 end
 
 
@@ -120,7 +135,6 @@ function run_rays(  #Cavity parameters
                     symmetry::Int64 = 1,
                     thetares::Int64 = 25,
                     sinchires::Int64= 25,
-                    deviation::Int64 = 13,
                     
                     #Solver parameters
                     maxpathlength::Float64 = 200.0,
@@ -150,9 +164,9 @@ function run_rays(  #Cavity parameters
     #Autogenerate initarray
     if isempty(initarray)
         if isempty(pssinitarray)
-            pssinitarray = gen_pssinitarray(thetares,sinchires,deviation,symmetry)
+            pssinitarray = gen_pssinitarray(thetares,sinchires,symmetry)
         end
-        initarray = gen_initarray(bnd,pssinitarray)
+        initarray = pss2initarray(bnd,pssinitarray)
     end
     
     #Consolidate run parameters in a single record

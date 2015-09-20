@@ -37,7 +37,7 @@
 #>> Initial conditions
 
 #   set_init_params!(;kwargs...)
-#   Sets the initial conditions autogeneration parameter represented by keywords to the numerical value associated to it in <kwargs>. Appropriate keywords are: symmetry, thetares, sinchires, deviation.
+#   Sets the initial conditions autogeneration parameter represented by keywords to the numerical value associated to it in <kwargs>. Appropriate keywords are: symmetry, thetares, sinchires.
 
 #   value = get_init_param(key::Union(String,Symbol))
 #   Returns the current value of the initial conditions autogeneration parameter represented by the symbol or string <key>.
@@ -110,7 +110,6 @@ init = Dict{Symbol,Number}()
 init[:symmetry] = 1
 init[:thetares] = 25
 init[:sinchires]= 25
-init[:deviation] = 13
 pssinitarray = Array(Float64,0,2)
 initarray = Array(Float64,0,3)
 
@@ -265,7 +264,6 @@ function runcavity()
                 symmetry = get_init_param(:symmetry),
                 thetares = get_init_param(:thetares),
                 sinchires= get_init_param(:sinchires),
-                deviation = get_init_param(:deviation),
                 
                 #Solver parameters
                 maxpathlength = get_solver_param(:maxpathlength),
