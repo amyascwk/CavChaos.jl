@@ -53,12 +53,12 @@ module CavChaos
     
     #Control file interface for single cavity run
     include("run_cavity.jl")
-    export set_cavity_bnd, get_cavity_bnd, set_cavity_idx, get_cavity_idx
-    export set_simulation_params, get_simulation_param
-    export set_init_params, get_init_param
-    export set_pssinitarray, get_pssinitarray, set_initarray, get_initarray
-    export set_resultsroot, get_resultsroot
-    export set_results, unset_results, get_results
+    export set_cavity_bnd!, get_cavity_bnd, set_cavity_idx!, get_cavity_idx
+    export set_simulation_params!, get_simulation_param
+    export set_init_params!, get_init_param
+    export set_pssinitarray!, get_pssinitarray, set_initarray!, get_initarray
+    export set_resultsroot!, get_resultsroot
+    export set_results!, unset_results!, get_results
     export runcavity
     
     
