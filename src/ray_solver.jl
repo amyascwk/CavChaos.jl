@@ -6,7 +6,7 @@
 
 #   raypath,bounceindices,bouncepoints = rayevolve_gsl(bnd::Boundary, idx::RefractiveIndex,init::Array{Float64,1};tmax::Float64=200.0,bouncemax::Int64=500,reltol::Float64=1.0e-12,abstol::Float64=1.0e-12)
 #   Computes the trajectory and bounce points in a cavity with boundary <bnd> and index distribution <idx>, of a ray with initial conditions <init>, which is an array of initial (<r>,<theta>,<phi>) or (radial position, angular position, angle of propagation) values or the ray. Runs the ODE solver with relative and absolute tolerances <reltol> and <abstol> (default 1.0e-12 each), and halts computation when pathlength reaches <tmax> (default 200.0) or number of bounces reaches <bouncemax> (default 500).
-#   Returns the 2D array <raypath> of (<r>,<theta>) positions traversed in the ray's path as its rows, the 1D array <bouncesindices> of row indices in <raypath> that bounces occur, and the 2D array <bouncepoints> with the (<theta>,sin(<chi>)) or (angular position,sin(angle of incidence)) values of each bounce as its rows.
+#   Returns the 2D array <raypath> of (<r>,<theta>) positions traversed in the ray's path as its rows, the 1D array <bouncesindices> of row indices in <raypath> that bounces occur, and the 2D array <bouncepoints> with the (<theta>,<chi>) or (angular position,angle of incidence) values of each bounce as its rows.
 #   This means that <raypath>[<bouncesindices>,2] == <bouncepoints>[:,1].
 
 
@@ -110,12 +110,12 @@ function rayevolve_gsl(bnd::Boundary,idx::RefractiveIndex,init::Array{Float64,1}
     bouncepoints::Array{Float64,2} = Array(Float64,lengths[2],2)
     for i=1:lengths[2]
         bouncepoints[i,1] = raypath_theta[bounceindices[i]]
-        bouncepoints[i,2] = sin(bouncepts_chi[i])
+        bouncepoints[i,2] = mod(bouncepts_chi[i]+pi,2*pi)-pi
     end
     #indices in raypath corresponding to bounces
     resize!(bounceindices,lengths[2])
     
-    #Return (raypath, bounceindices, bouncepoints), where the rows of raypath are the (r,theta) positions along the ray's path, bounceindices contains the indices of raypath that bounces occur, and the rows of bouncepoints are the (theta,sin(chi)) values of each bounce
+    #Return (raypath, bounceindices, bouncepoints), where the rows of raypath are the (r,theta) positions along the ray's path, bounceindices contains the indices of raypath that bounces occur, and the rows of bouncepoints are the (theta,chi) values of each bounce
     return (raypath, bounceindices, bouncepoints)
     
 end
