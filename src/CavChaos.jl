@@ -57,7 +57,7 @@ module CavChaos
     export set_simulation_params!, get_simulation_param
     export set_init_params!, get_init_param
     export set_pssinitarray!, get_pssinitarray, set_initarray!, get_initarray
-    export set_resultsroot!, get_resultsroot
+    export set_resultsroot!, get_resultsroot, get_resultsdir
     export set_results!, unset_results!, get_results
     export runcavity
     

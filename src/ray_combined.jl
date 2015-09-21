@@ -123,6 +123,26 @@ end
 # #############################################################################
 #Main ray simulation
 
+#Run params hash
+#Chunk all the simulation-relevant parameters together
+#Then get a hash to use as a checksum
+function get_runparamshash( initarray::Array{Float64,2},
+                            maxpathlength::Float64,maxbounces::Int64,
+                            relativetolerance::Float64,absolutetolerance::Float64,
+                            record_pssinitarray::Bool,record_initarray::Bool,
+                            record_initialconditions::Bool,record_raypath::Bool,
+                            record_bounceindices::Bool,record_bouncepoints::Bool,
+                            record_cavityimage::Bool,record_rayimage::Bool,
+                            record_pathlengths::Bool,record_actions::Bool,
+                            record_modeproperties::Bool,record_farfield::Bool)
+    run_params = cell(3)
+    run_params[1] = initarray
+    run_params[2] = Number[maxpathlength,maxbounces,relativetolerance,absolutetolerance]
+    run_params[3] = Bool[record_cavityimage,record_pssinitarray,record_initarray,record_initialconditions,record_raypath,record_bounceindices,record_bouncepoints,record_cavityimage,record_rayimage,record_pathlengths,record_actions,record_modeproperties,record_farfield]
+    return hash(run_params)
+end
+
+
 #Actual run
 function run_rays(  #Cavity parameters
                     bnd::Boundary,idx::RefractiveIndex;
@@ -134,7 +154,7 @@ function run_rays(  #Cavity parameters
                     #Initial conditions generator parameters
                     symmetry::Int64 = 1,
                     thetares::Int64 = 25,
-                    sinchires::Int64= 25,
+                    sinchires::Int64 = 25,
                     
                     #Solver parameters
                     maxpathlength::Float64 = 200.0,
@@ -169,14 +189,18 @@ function run_rays(  #Cavity parameters
         initarray = pss2initarray(bnd,pssinitarray)
     end
     
-    #Consolidate run parameters in a single record
-    run_params = cell(3)
-    run_params[1] = initarray
-    run_params[2] = Number[maxpathlength,maxbounces,relativetolerance,absolutetolerance]
-    run_params[3] = Bool[record_cavityimage,record_pssinitarray,record_initarray,record_initialconditions,record_raypath,record_bounceindices,record_bouncepoints,record_cavityimage,record_rayimage,record_pathlengths,record_actions,record_modeproperties,record_farfield]
-    
     #Get results directory
-    const resultsdir::String = getresultsdir(hash(run_params),bnd,idx,resultsroot)
+    const run_params_hash::Uint64 = 
+        get_runparamshash(  initarray,
+                            maxpathlength,maxbounces,
+                            relativetolerance,absolutetolerance,
+                            record_pssinitarray,record_initarray,
+                            record_initialconditions,record_raypath,
+                            record_bounceindices,record_bouncepoints,
+                            record_cavityimage,record_rayimage,
+                            record_pathlengths,record_actions,
+                            record_modeproperties,record_farfield)
+    const resultsdir::String = getresultsdir(run_params_hash,bnd,idx,resultsroot)
     
     #Write cavity image and get plot range
     if record_cavityimage

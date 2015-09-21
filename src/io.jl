@@ -64,11 +64,11 @@ function getcavitydir(bnd::Boundary,idx::RefractiveIndex,resultsroot::String="."
 end
 
 #Get run-specific directory
-function getresultsdir(run_params_hash::Uint64,bnd::Boundary,idx::RefractiveIndex,resultsroot::String=".")
+function getresultsdir(run_params_hash::Uint64,bnd::Boundary,idx::RefractiveIndex,resultsroot::String=".";makedir::Bool=true)
     #Get directory name
     resultsdir::String = joinpath(getcavitydir(bnd,idx,resultsroot),"run"*dec2base64(run_params_hash))
     #Make directory
-    if !isdir(resultsdir); mkdir(resultsdir); end
+    if makedir && !isdir(resultsdir); mkdir(resultsdir); end
     return resultsdir
 end
 
