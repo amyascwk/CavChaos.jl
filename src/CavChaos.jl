@@ -65,6 +65,10 @@ module CavChaos
     # #########################################################################
     #Mode-finding layer
     
+    #Clustering algorithm
+    include("clustering.jl")
+    export findcluster
+    
     #Wrapper function for mode finders implemented in libcavchaos.so
     #C code in mode.c
     include("mode_solver.jl")
