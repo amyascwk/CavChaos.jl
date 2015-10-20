@@ -6,6 +6,21 @@
 
 #Finding the order of periodicity of a series of bounces from their positions on the PSS is a constrained clustering problem, where the data is already ordered such that the clusters are sampled periodically, so points from the same cluster are separated by uniform intervals equal to the number of clusters.
 
+#   clustcount,clustsepmean = findcluster(bncpts::Array{Float64,2};threshhold::Float64=0.1,samplesize::Int64=30)
+#   This function estimates the number of clusters in the sequence <bncpts> of (theta,chi) bouncepoint locations on the Poincare Surface of Section, but averaging the pairwise distances of <samplesize> bouncepoints separated by a fixed interval in the sequence, and finding the highest interval for which there is a sharp drop in average distance to a proportion below <threshhold>.
+#   The number <clustcount> of clusters and the associated mean cluster separation <clustsepmean> are returned. If no clear indication of clustering is found (no drop in mean cluster separation below threshhold), then <clustcount> is set to 1.
+
+
+# #############################################################################
+# #############################################################################
+#Initiate
+
+#Dependencies
+#require("util.jl")
+#require("boundary.jl")
+#require("refractive_index.jl")
+#require("solver.jl")
+
 
 # #############################################################################
 # #############################################################################
@@ -45,7 +60,8 @@ end
 #   1) Distance between pairs of points a fixed interval apart in the bounce sequence 
 #      is estimated by the mean of such pairwise distances from all such pairs 
 #      available in the bounce data. This approximates the distance between their 
-#      corresponding clusters, so a sudden low value indicates that each pair belongs #      to the same cluster.
+#      corresponding clusters, so a sudden low value indicates that each pair belongs
+#      to the same cluster.
 #   2) The cluster count is initially estimated to be 1
 #   3) The cluster distance for various intervals of bounce points is computed, with 
 #      the interval incremented by the cluster count, since that should be a divisor 
