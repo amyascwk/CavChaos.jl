@@ -71,7 +71,7 @@ module CavChaos
     
     #Wrapper function for mode finders implemented in libcavchaos.so
     #C code in mode.c
-    include("mode_solver.jl")
+    include("mode_finder.jl")
     export findmode_gsl
     
     
