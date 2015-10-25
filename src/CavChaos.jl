@@ -26,6 +26,7 @@ module CavChaos
     export hash
     export getresultsdir
     export writeresults, readresults
+    export collectresultids
     
     
     # #########################################################################

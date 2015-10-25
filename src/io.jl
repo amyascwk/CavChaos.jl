@@ -72,13 +72,47 @@ function getresultsdir(run_params_hash::Uint64,bnd::Boundary,idx::RefractiveInde
     return resultsdir
 end
 
-#Get result filename from label (without extension)
+
+# #############################################################################
+# #############################################################################
+#Result file naming conventions
+
+#Combine labels for multiple (nonarray) data in a single file
+function combinelabels(label::String,labels...)
+    return label*"_"*combinelabels(labels...)::String
+end
+
+#Split combined label into array of labels
+function splitlabel(combinedlabel::String)
+    return split(combinedlabel,'_')
+end
+
+#Get datafile filename from label (without extension)
+#The resultid is included at the start of the filename if it is nonzero
 function getresultfname(resultid::Int64,label::String)
-    if resultid == 0
-        return label
+    return (resultid == 0) ? label : @sprintf("%04d_%s",resultid,label)
+end
+
+#Extract the result id and labels from a datafile filename
+function splitresultfname(fname::String)
+    noextfname::String = splitext(fname)[1]
+    #Check if datafile filename has a resultid at the start
+    if ismatch(Regex("^\\d{4}_"),fname)
+        return int64(noextfname[1:4]), splitlabel(noextfname[6:end])
     else
-        return @sprintf("%04d_%s",resultid,label)
+        return 0, splitlabel(noextfname)
     end
+end
+
+#Check if datafile filename has a given label
+#Return (resultid,dataindex) pair, where dataindex is an indicator that is
+#-1 if label was not found, 0 if label refers to data in whole file,
+#and the actual index of the data otherwise
+function checkfnameforlabel(fname::String,label::String)
+    resultid::Int64,labels::Array{String,1} = splitresultfname(fname)
+    index::Int64 = findfirst(labels,label)
+    dataindex::Int64 = (index == 0) ? -1 : (length(labels) == 1) ? 0 : index
+    return resultid, dataindex
 end
 
 
@@ -93,6 +127,7 @@ end
 writeresults(resultsdir::String,resultid::Int64) = nothing
 
 #>> Write arrays directly
+#   (1D and 2D case)
 function writeresults{T}(resultsdir::String,resultid::Int64,label::String,data::Union(Array{T,1},Array{T,2}),args...)
     #single csv file suffices for 1D or 2D arrays
     resultfile::String = joinpath(resultsdir,getresultfname(resultid,label)*".dat")
@@ -101,6 +136,7 @@ function writeresults{T}(resultsdir::String,resultid::Int64,label::String,data::
     writeresults(resultsdir,resultid,args...)
 end
 
+#   (N dimensional case)
 function writeresults{T,N}(resultsdir::String,resultid::Int64,label::String,data::Array{T,N},args...)
     #this is run when N>2
     #need multiple files so store them in a directory
@@ -128,9 +164,7 @@ function writeresults(resultsdir::String,resultid::Int64,args...)
     for item in data_array
         assert(!(typeof(item) <: Array))
     end
-    combined_label::String = join([args[1:2:]...],"_")
-    combined_data::Array = transpose(data_array)
-    writeresults(resultsdir,resultid,combined_label,combined_data)
+    writeresults(resultsdir,resultid,combinelabels(args[1:2:]...),data_array)
 end
 
 #Read results
@@ -150,17 +184,14 @@ function readresults(resultsdir::String,resultid::Int64,label::String,T::Type=Fl
     
     #Otherwise search for label in combined data files
     #Search for matches in list of files/directories
-    filelist::Array{String,1} = readdir(resultsdir)
-    for fname in filelist
-        fnameparts::Array{String,1} = split(fname,['_','.'])
-        index::Int64 = findfirst(fnameparts,label)
-        if index>1
-            #found a match!
+    for fname in readdir(resultsdir)
+        resultid::Int64,dataindex::Int64 = checkfnameforlabel(fname,label)
+        if dataindex > 0
+            #found a file with multiple combined results,
+            #one of which is the given label
             resultfile::String = joinpath(resultsdir,fname)
             if isfile(resultfile)
-                #a file with multiple combined results
-                #Return the (index-1)th entry
-                entry = readcsv(resultfile)[index-1]
+                entry = readcsv(resultfile)[dataindex]
                 if typeof(entry) <: Number
                     return convert(T,entry)
                 else
@@ -199,3 +230,14 @@ function readNdimcsv(resultpath::String,T::Type=Float64)
 end
 
 
+# #############################################################################
+# #############################################################################
+#Result collection
+
+#Get list of resultids with a specific result recorded
+function collectresultids(resultsdir::String,label::String)
+    return map(first,
+               filter(p -> p[2] != -1,
+                      map(fn -> checkfnameforlabel(fn,label),
+                          readdir(resultsdir))))
+end
