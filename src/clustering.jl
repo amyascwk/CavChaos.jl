@@ -8,7 +8,7 @@
 
 #   clustcount,clustsepmean = findcluster(bncpts::Array{Float64,2};threshhold::Float64=0.1,samplesize::Int64=30)
 #   This function estimates the number of clusters in the sequence <bncpts> of (theta,chi) bouncepoint locations on the Poincare Surface of Section, but averaging the pairwise distances of <samplesize> bouncepoints separated by a fixed interval in the sequence, and finding the highest interval for which there is a sharp drop in average distance to a proportion below <threshhold>.
-#   The number <clustcount> of clusters and the associated mean cluster separation <clustsepmean> are returned. If no clear indication of clustering is found (no drop in mean cluster separation below threshhold), then <clustcount> is set to 1.
+#   The number <clustcount> of clusters and the associated mean separation <clustsepmean> of points within each cluster are returned. If no clear indication of clustering is found (no drop in mean intra-cluster separation below threshhold), then <clustcount> is set to 1.
 
 
 # #############################################################################
@@ -19,28 +19,33 @@
 #require("util.jl")
 #require("boundary.jl")
 #require("refractive_index.jl")
-#require("solver.jl")
+#require("ray_solver.jl")
 
 
 # #############################################################################
 # #############################################################################
 #Distance definitions on the Poincare Surface of Section
 
+#Convert incidence angle chi to value that grows approximately linearly with
+#the periodicity number of whispering gallery modes in a circular cavity. Returns
+#the number of sides of a regular polygon-shaped mode if given the appropriate
+#incidence angle (half the interior angle).
+function chi2whisporder(chi::Float64)
+    return 2*pi/(pi-2*chi)::Float64
+end
+
 #Metric on the PSS
-function pssmetric(dtheta::Float64,dchi::Float64)
-    return hypot(2*dchi,sin(dtheta/2))
+#Treats (theta,chi) pairs as positions on an infinite cylinder embedded in R^3,
+#theta being the angular position and tan(chi) being the vertical position.
+function pssmetric(theta1::Float64,theta2::Float64,chi1::Float64,chi2::Float64)
+    return hypot(2*sin(0.5*(theta1-theta2)),
+                 chi2whisporder(chi1)-chi2whisporder(chi2))::Float64
 end
 
 #Distance function between 2 points on the PSS
 #Column vectors
-function pssdist(p1::Array{Float64,1},p2::Array{Float64,1})
-    assert(length(p1) == length(p2) == 2)
-    return pssmetric(p1[1]-p2[1],p1[2]-p2[2])
-end
-#Row vectors
-function pssdist(p1::Array{Float64,2},p2::Array{Float64,2})
-    assert(size(p1,1) == size(p2,1) == 1)
-    return pssdist(p1[:],p2[:])
+function pssdist{N1,N2}(p1::Array{Float64,N1},p2::Array{Float64,N2})
+    return pssmetric(p1[1],p2[1],p1[2],p2[2])::Float64
 end
 
 
@@ -84,15 +89,19 @@ function periodic_pssdist(bncpts::Array{Float64,2},order::Int64,samplesize::Int6
 end
 
 #Estimate the number of clusters of bouncepoints
-function findcluster(bncpts::Array{Float64,2};threshhold::Float64=0.1,samplesize::Int64=30)
+function findcluster(bncpts::Array{Float64,2};threshhold::Float64=0.1,samplesize::Int64=30,maxtestinterval::Int64=0)
+    #Invalid maximum test interval means no limit
+    if maxtestinterval <= 0
+        maxtestinterval = size(bncpts,1) - samplesize - 1
+    end
+    
     #Initiate
     clustcount::Int64 = 1
     testinterval::Int64 = 2
     clustsepsum::Float64 = periodic_pssdist(bncpts,1,samplesize)
     clustsepcount::Int64 = 1
     
-    const maxtestinterval::Int64 = size(bncpts,1)-samplesize
-    while(testinterval < maxtestinterval)
+    while(testinterval <= maxtestinterval)
         #Get mean PSS distance for test interval
         testdist::Float64 = periodic_pssdist(bncpts,testinterval,samplesize)
         
@@ -101,12 +110,12 @@ function findcluster(bncpts::Array{Float64,2};threshhold::Float64=0.1,samplesize
             #Sharp drop detected
             #cluster count likely to be multiple of test interval
             clustcount = testinterval
-            #Reset cluster distance data
+            #Reset intra-cluster distance data
             clustsepsum = testdist
             clustsepcount = 1
         else
             #No significant drop detected
-            #Collect cluster separation data
+            #Collect intra-cluster separation data
             clustsepsum += testdist
             clustsepcount += 1
         end
@@ -115,7 +124,8 @@ function findcluster(bncpts::Array{Float64,2};threshhold::Float64=0.1,samplesize
         testinterval += clustcount
     end
     
-    #Return best estimate of number of clusters
+    #Return best estimate of number of clusters, and mean separation of points
+    #within each cluster
     return clustcount, clustsepsum/clustsepcount
 end
 

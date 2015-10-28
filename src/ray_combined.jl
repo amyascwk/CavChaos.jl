@@ -85,7 +85,7 @@ function gen_pssinitarray(thetares::Int64=25,chires::Int64=25,symmetry::Int64=1)
     #generate theta values spanning angle up to cavity rotational symmetry
     theta::Array{Float64,1} = linspace(0,2*pi/symmetry,N+1)[1:N]
     #generate chi values excluding 0 and pi/2
-    chi::Array{Float64,1} = linspace(0,pi/2,N+2)[2:N+1]
+    chi::Array{Float64,1} = linspace(0,(1-1/chires)*pi/2,N+1)[2:end]
     
     #In order to generate a lattice that is as evenly spread out as possible, can do 
     #this by stepping through appropriate intervals in mod <N>. By having N be in the 

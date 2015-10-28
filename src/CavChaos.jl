@@ -67,7 +67,7 @@ module CavChaos
     #Control file interface for single cavity run
     include("run_cavity.jl")
     export set_cavity_bnd!, get_cavity_bnd, set_cavity_idx!, get_cavity_idx
-    export set_simulation_params!, get_simulation_param
+    export set_solver_params!, get_solver_param
     export set_init_params!, get_init_param
     export set_pssinitarray!, get_pssinitarray, set_initarray!, get_initarray
     export set_resultsroot!, get_resultsroot, get_resultsdir
@@ -78,9 +78,14 @@ module CavChaos
     # #########################################################################
     #Mode-finding layer
     
-    #Clustering algorithm
+    #Clustering algorithm (specific to periodic points on PSS)
     include("clustering.jl")
     export findcluster
+    
+    #PSS plotting and image I/O functions
+    include("mode_plot.jl")
+    export plotpss
+    export getpssimgfile, writepssimg
     
     #Wrapper function for mode finders implemented in libcavchaos.so
     #C code in mode.c
