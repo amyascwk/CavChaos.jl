@@ -15,19 +15,19 @@
 
 #The following functions are used for storing or retrieving the cavity and ray plots as bitmap images, which are sufficient for obtaining a qualitative idea of any mode present, but much less disk space intensive than storing the entire raypath data directly.
 
-#   cavityimgpath = getcavityimgfile(resultsdir::String)
+#   cavityimgpath = getcavityimgfile(resultsdir::AbstractString)
 #   Returns the path <cavityimgpath> to the cavity image file for a specified simulation run in the results directory <resultsdir>.
 
-#   rayimgpath = getrayimgfile(resultsdir::String,resultid::Int64)
+#   rayimgpath = getrayimgfile(resultsdir::AbstractString,resultid::Int64)
 #   Returns the path <rayimgpath> to the ray image file for the <resultid>th computation of a specified simulation run in the results directory <resultsdir>.
 
-#   range = writecavityimg(resultsdir::String,bnd::Boundary,idx::RefractiveIndex)
+#   range = writecavityimg(resultsdir::AbstractString,bnd::Boundary,idx::RefractiveIndex)
 #   Writes an image of the cavity with boundary <bnd> and index distribution <idx> in the results directory <resultsdir>. Returns the range <range> of the matplotlib axes plot for calibrating the ray images.
 
-#   rayline = writerayimg(resultsdir::String,resultid::Int64, raypath::Array{Float64,2},range::Array{Float64,1}=[-1.0,1.0,-1.0,1.0])
+#   rayline = writerayimg(resultsdir::AbstractString,resultid::Int64, raypath::Array{Float64,2},range::Array{Float64,1}=[-1.0,1.0,-1.0,1.0])
 #   Writes an image of the rays following the path <raypath> from the <resultid>th computation of a specified simulation run in the results directory <resultsdir>, adjusting the matplotlib axes range to <range>. Returns the matplotlib line object <rayline> from the plot.
 
-#   writerayimg(resultsdir::String,resultid::Int64,raypath::Array{Float64,2},rayline)
+#   writerayimg(resultsdir::AbstractString,resultid::Int64,raypath::Array{Float64,2},rayline::PyObject)
 #   Writes an image of the rays following the path <raypath> from the <resultid>th computation of a specified simulation run in the results directory <resultsdir>. Obtains image by altering the line data in the matplotlib line object <rayline> of an existing ray image, for a speedier plot.
 
 
@@ -50,8 +50,8 @@ using PyCall
 #Plotting tools
 
 #Common preparation of empty plot for cavity and ray plotting functions
-function prepareplot()
-    ax = plt.figure(figsize=(5,5))[:gca](aspect="equal")
+function prepareplot(;figwidth::Float64=5.0,figheight::Float64=5.0)
+    ax = plt.figure(figsize=(figwidth,figheight))[:gca](aspect="equal")
     plt.gcf()[:tight_layout]()
     return ax
 end
@@ -127,17 +127,17 @@ end
 #Ray image I/O
 
 #Get cavity image file location
-function getcavityimgfile(resultsdir::String)
+function getcavityimgfile(resultsdir::AbstractString)
     return joinpath(resultsdir,"cavity.png")
 end
 
 #Get ray image file location
-function getrayimgfile(resultsdir::String,resultid::Int64)
+function getrayimgfile(resultsdir::AbstractString,resultid::Int64)
     return joinpath(resultsdir,getresultfname(resultid,"ray")*".png")
 end
 
 #Attempts to store image of cavity if not already present. Returns the axis range of the cavity.
-function writecavityimg(resultsdir::String,bnd::Boundary,idx::RefractiveIndex)
+function writecavityimg(resultsdir::AbstractString,bnd::Boundary,idx::RefractiveIndex)
     #Create new figure
     cavityplot = prepareplot()
     
@@ -158,7 +158,7 @@ function writecavityimg(resultsdir::String,bnd::Boundary,idx::RefractiveIndex)
 end
 
 #Stores newly created image of ray and returns the matplotlib line object of the ray plot for more efficient future editing.
-function writerayimg(resultsdir::String,resultid::Int64,raypath::Array{Float64,2},range::Array{Float64,1}=[-1.0,1.0,-1.0,1.0])
+function writerayimg(resultsdir::AbstractString,resultid::Int64,raypath::Array{Float64,2},range::Array{Float64,1}=[-1.0,1.0,-1.0,1.0])
     #Create new figure
     rayplot = prepareplot()
     
@@ -173,7 +173,7 @@ function writerayimg(resultsdir::String,resultid::Int64,raypath::Array{Float64,2
 end
 
 #Stores image of ray after editing the matplotlib line object of an existing ray plot.
-function writerayimg(resultsdir::String,resultid::Int64,raypath::Array{Float64,2},rayline)
+function writerayimg(resultsdir::AbstractString,resultid::Int64,raypath::Array{Float64,2},rayline::PyObject)
     #Edit existing ray line
     rayline[:set_xdata](raypath[:,1].*cos(raypath[:,2]))
     rayline[:set_ydata](raypath[:,1].*sin(raypath[:,2]))
@@ -183,53 +183,3 @@ function writerayimg(resultsdir::String,resultid::Int64,raypath::Array{Float64,2
     return nothing
 end
 
-
-# #############################################################################
-# #############################################################################
-#Don't need these
-
-# #Add current directory to python import path
-# unshift!(PyVector(pyimport("sys")["path"]), "")
-# interact = pyimport("interact")
-# 
-#Plot Poincare Surface of Section (deprecated)
-# function plotpss(bnd::Boundary,idx::RefractiveIndex,args...;axes=plt.gca(),kwargs...)
-#     #Show critical angle in PSS plot
-#     plotpss(args...,axes=axes;kwargs...)
-#     theta = linspace(-pi,pi,200)
-#     sinchi0 = 1.0 ./nfunc(idx,float64(rfunc(bnd,theta)),theta)
-#     plt.plot(theta,sinchi0,"m",theta,-sinchi0,"m",axes=axes)
-#     return nothing
-# end
-# 
-# function plotpss(bouncesval::Array,args...;kwargs...)
-#     uclstval::Array{Float64,1} = Array(Float64,1)
-#     for i = 2:length(bouncesval)
-#         push!(uclstval,unclusteredness(bouncesval[i]))
-#     end
-#     return plotpss(bouncesval,uclstval,args...;kwargs...)
-# end
-# 
-# function plotpss(bouncesval::Array{Array{Float64,2},1},uclstval::Array{Float64,1};axes=plt.gca())
-#     assert(length(bouncesval)==length(uclstval))
-#     
-#     plt.plot([-pi,pi],[0,0],"k")
-#     plt.axis([-pi,pi,-0.6,1])
-#     PyPlot.matplotlib[:rc]("text", usetex=true)
-#     plt.xlabel("\$\\displaystyle\\theta\$", fontsize=18)
-#     plt.ylabel("\$\\displaystyle\\sin\\chi\$", fontsize=18)
-#     
-#     #Emphasize first set of points
-#     bounces::Array{Float64,2} = bouncesval[1]
-#     plt.plot(bounces[:,1],sin(bounces[:,2]),".",ms=8,mec="k",mfc="r",mew=1.5,picker=true,zorder=length(bouncesval),label="(\"0000\",$(uclstval[1]))",axes=axes)
-# 
-    #Scatter remaining points
-#     for i=2:length(bouncesval)
-#         bounces = bouncesval[i]
-#         color = interact[:colorfunc](uclstval[i])
-#         plt.plot(bounces[:,1],sin(bounces[:,2]),".",color=color,markersize=2,picker=true,label="(\"$(dec(i-1,4))\",$(uclstval[i]))",axes=axes)
-#     end
-#     
-#     return nothing
-# end
-# 

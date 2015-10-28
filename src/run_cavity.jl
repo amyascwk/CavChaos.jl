@@ -31,7 +31,7 @@
 #   set_solver_params!(;kwargs...)
 #   Sets the solver parameter represented by keywords to the numerical value associated to it in <kwargs>. Appropriate keywords are: maxpathlength, maxbounces, relativetolerance, absolutetolerance.
 
-#   value = get_solver_param(key::Union(String,Symbol))
+#   value = get_solver_param(key::Union(AbstractString,Symbol))
 #   Returns the current value of the solver parameter represented by the symbol or string <key>.
 
 #>> Initial conditions
@@ -39,7 +39,7 @@
 #   set_init_params!(;kwargs...)
 #   Sets the initial conditions autogeneration parameter represented by keywords to the numerical value associated to it in <kwargs>. Appropriate keywords are: symmetry, thetares, chires.
 
-#   value = get_init_param(key::Union(String,Symbol))
+#   value = get_init_param(key::Union(AbstractString,Symbol))
 #   Returns the current value of the initial conditions autogeneration parameter represented by the symbol or string <key>.
 
 #   set_pssinitarray!(A::Array{Float64,2})
@@ -56,7 +56,7 @@
 
 #>> Results directories
 
-#   set_resultsroot!(dir::String)
+#   set_resultsroot!(dir::AbstractString)
 #   Sets the results root directory (in which a "results" subdirectory stores all output data) to <dir>.
 
 #   get_resultsroot()
@@ -74,7 +74,7 @@
 #   unset_results!(args...)
 #   For a convenient syntax, if the above results keywords are passed as regular symbol or string arguments to set_results!, then they will be recorded. If passed to unset_results!, they will not.
 
-#   boolean = get_results(key::Union(String,Symbol))
+#   boolean = get_results(key::Union(AbstractString,Symbol))
 #   Returns whether the result represented by the keyword represented by the string or symbol <key> will be recorded.
 
 #Finally, the actual run is started by a call to the function runcavity().
@@ -172,7 +172,7 @@ function set_solver_params!(;kwargs...)
     return nothing
 end
 
-function get_solver_param(key::Union(String,Symbol))
+function get_solver_param(key::Union(AbstractString,Symbol))
     return solver[symbol(key)]::Number
 end
 
@@ -188,7 +188,7 @@ function set_init_params!(;kwargs...)
     return nothing
 end
 
-function get_init_param(key::Union(String,Symbol))
+function get_init_param(key::Union(AbstractString,Symbol))
     return init[symbol(key)]::Number
 end
 
@@ -217,13 +217,13 @@ function get_initarray()
 end
 
 #Root directory to store results
-function set_resultsroot!(directory::String)
+function set_resultsroot!(directory::AbstractString)
     global resultsroot = directory
     return nothing
 end
 
 function get_resultsroot()
-    return resultsroot::String
+    return resultsroot::AbstractString
 end
 
 #Results directory for the current configuration
@@ -241,7 +241,7 @@ function get_resultsdir()
     end
     
     #Get run parameter hash
-    run_params_hash::Uint64 = 
+    run_params_hash::UInt64 = 
         get_runparamshash(  initarray,
                             get_solver_param(:maxpathlength),
                             get_solver_param(:maxbounces),
@@ -278,7 +278,7 @@ function unset_results!(args...)
     set_results!(;[(symbol(arg),false) for arg in args]...)
 end
 
-function get_results(key::Union(String,Symbol))
+function get_results(key::Union(AbstractString,Symbol))
     return results[symbol(key)]::Bool
 end
 

@@ -4,6 +4,18 @@
 
 module CavChaos
     
+    #Pre-Julia v0.4.0 compatibility
+    if VERSION < v"0.4-"
+        UInt64 = Uint64
+        AbstractString = String
+        export UInt64, AbstractString
+    else
+        Union_type = Union
+        Union(args...) = Union_type{args...}
+        export Union
+    end
+    
+    
     # #########################################################################
     #Cavity definition and miscellaneous layer
     

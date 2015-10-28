@@ -32,7 +32,7 @@
 #       relative tolerance limits for solvers
 #   
 #>> Results root directory
-#   resultsroot::String = "."
+#   resultsroot::AbstractString = "."
 #       root directory to store result subdirectories
 #   
 #>> Results to record
@@ -163,7 +163,7 @@ function run_rays(  #Cavity parameters
                     absolutetolerance::Float64 = 1.0e-12,
                     
                     #Results root directory
-                    resultsroot::String = ".",
+                    resultsroot::AbstractString = ".",
                     
                     #Results to record
                     record_pssinitarray::Bool = false,
@@ -190,7 +190,7 @@ function run_rays(  #Cavity parameters
     end
     
     #Get results directory
-    const run_params_hash::Uint64 = 
+    const run_params_hash::UInt64 = 
         get_runparamshash(  initarray,
                             maxpathlength,maxbounces,
                             relativetolerance,absolutetolerance,
@@ -200,7 +200,7 @@ function run_rays(  #Cavity parameters
                             record_cavityimage,record_rayimage,
                             record_pathlengths,record_actions,
                             record_modeproperties,record_farfield)
-    const resultsdir::String = getresultsdir(run_params_hash,bnd,idx,resultsroot)
+    const resultsdir::AbstractString = getresultsdir(run_params_hash,bnd,idx,resultsroot)
     
     #Write cavity image and get plot range
     if record_cavityimage
