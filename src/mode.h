@@ -5,7 +5,7 @@ extern void findmode(
     //mode-specific variables
     long order, double modebounces[],
     //initial position on PSS
-    double theta0, double sinchi0,
+    double theta0, double chi0,
     //root-finding algorithm parameters
     double rtol, long maxiter,
     //Cavity parameters

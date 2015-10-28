@@ -89,24 +89,21 @@ int rootfunc(const gsl_vector *x, void *params, gsl_vector *f){
     
     //Store difference in initial and final bounce locations (print for debugging)
     const double dtheta = fmod(raypath_theta[bounceindices[order]-1] - raypath_theta[bounceindices[0]-1] + pi, 2*pi) - pi;
-    //Equivalent to sin(bouncepts_chi[order]) - sin(bouncepts_chi[0]);
-    //but more accurate for small differences
-    const double dsinchi = 2*sin(0.5*(bouncepts_chi[order]-bouncepts_chi[0]))*
-        cos(0.5*(bouncepts_chi[order]+bouncepts_chi[0]));
-    gsl_vector_set(f,0,dtheta/pi);
-    gsl_vector_set(f,1,dsinchi);
-    //printf("dtheta = %.8f, dsinchi = %.8f\n",dtheta,dsinchi);
+    const double dchi = bouncepts_chi[order] - bouncepts_chi[0];
+    gsl_vector_set(f,0,dtheta);
+    gsl_vector_set(f,1,dchi);
+    //printf("dtheta = %.8f, dchi = %.8f\n",dtheta,dchi);
     
     //Test stopping criterion
     if(gsl_multiroot_test_residual(f,(*mip).rtol) != GSL_CONTINUE){
         //Record mode bounce data in results array (to avoid running simulation again)
         double *modebounces = (double *)(*mip).modebounces;
         //theta values stored in first half of array (first column after reshaping)
-        //sinchi values stored in second half of array (second column after reshaping)
+        //chi values stored in second half of array (second column after reshaping)
         int i;
         for(i=0; i<order; i+=1){
             modebounces[i] = raypath_theta[bounceindices[i]-1];
-            modebounces[order+i] = sin(bouncepts_chi[i]);
+            modebounces[order+i] = bouncepts_chi[i];
         }
     }
     
@@ -120,7 +117,7 @@ int findmode(
     //mode-specific variables
     long order, double modebounces[],
     //initial position on PSS
-    double theta0, double sinchi0,
+    double theta0, double chi0,
     //root-finding algorithm parameters
     double rtol, long maxiter,
     //Cavity parameters
@@ -140,7 +137,7 @@ int findmode(
         //Store initial guess
         gsl_vector *x0 = gsl_vector_alloc(2);
         gsl_vector_set(x0,0,theta0);
-        gsl_vector_set(x0,1,asin(sinchi0));
+        gsl_vector_set(x0,1,chi0);
         
         //Initiate solver
         const gsl_multiroot_fsolver_type *fs_t = gsl_multiroot_fsolver_dnewton;
