@@ -41,7 +41,7 @@
 #require("refractive_index.jl")
 #require("io.jl")
 import PyPlot.plt
-plt.ioff()
+plt[:ioff]()
 using PyCall
 
 
@@ -51,25 +51,25 @@ using PyCall
 
 #Common preparation of empty plot for cavity and ray plotting functions
 function prepareplot(;figwidth::Float64=5.0,figheight::Float64=5.0)
-    ax = plt.figure(figsize=(figwidth,figheight))[:gca](aspect="equal")
-    plt.gcf()[:tight_layout]()
+    ax = plt[:figure](figsize=(figwidth,figheight))[:gca](aspect="equal")
+    plt[:gcf]()[:tight_layout]()
     return ax
 end
 
 #Plot the boundary
-function plotbnd(bnd::Boundary;axes=plt.gca(),normvec::Bool=false)
+function plotbnd(bnd::Boundary;axes=plt[:gca](),normvec::Bool=false)
     #Plots a boundary, with the option of showing its normal vectors as red emanating lines.
     theta::Array{Float64,1} = linspace(0,2*pi,500)
     r::Array{Float64,1} = rfunc(bnd,theta)
-    plt.plot(r.*cos(theta),r.*sin(theta),"g",axes=axes)
-    plt.axis([-r[1],r[1],-r[1],r[1]],axes=axes)
+    plt[:plot](r.*cos(theta),r.*sin(theta),"g",axes=axes)
+    plt[:axis]([-r[1],r[1],-r[1],r[1]],axes=axes)
     
     if normvec
         #Plot the norm vector along boundary
         theta_n::Array{Float64,1} = linspace(0,2*pi,51)
         r_n::Array{Float64,1},alpha::Array{Float64,1} = rsys(bnd,theta_n)
         for i = 1:length(theta_n)
-            plt.arrow(r_n[i]*cos(theta_n[i]),r_n[i]*sin(theta_n[i]),0.1*cos(alpha[i]),0.1*sin(alpha[i]);color="r",axes=axes)
+            plt[:arrow](r_n[i]*cos(theta_n[i]),r_n[i]*sin(theta_n[i]),0.1*cos(alpha[i]),0.1*sin(alpha[i]);color="r",axes=axes)
         end
     end
     
@@ -78,7 +78,7 @@ end
 
 
 #Plot the refractive index distribution
-function plotidx(idx::RefractiveIndex,bnd::Boundary;axes=plt.gca())
+function plotidx(idx::RefractiveIndex,bnd::Boundary;axes=plt[:gca]())
     #Plots a filled labelled contour plot of the cavity interior's refractive index distribution, where darker shades indicate higher refractive index.
     thetares::Int64 = 100; rres::Int64 = 100
     
@@ -91,14 +91,14 @@ function plotidx(idx::RefractiveIndex,bnd::Boundary;axes=plt.gca())
     y::Array{Float64,2} = rs.*sin(thetas)
     n::Array{Float64,2} = nfunc(idx,rs,thetas)
     
-    plt.contourf(x,y,n,100,cmap="bone_r",axes=axes)
-    contobj = plt.contour(x,y,n,100,cmap="bone_r",alpha=0.2,axes=axes)
+    plt[:contourf](x,y,n,100,cmap="bone_r",axes=axes)
+    contobj = plt[:contour](x,y,n,100,cmap="bone_r",alpha=0.2,axes=axes)
     levels = contobj[:levels][1:10:end]
-    plt.clabel(contobj,levels,colors="k")
+    plt[:clabel](contobj,levels,colors="k")
     return nothing
 end
 
-function plotidx(idx::RefractiveIndex;axes=plt.gca())
+function plotidx(idx::RefractiveIndex;axes=plt[:gca]())
     #Plots a filled labelled contour plot of the refractive index distribution
     res::Int64 = 200
     x::Array{Float64,2} = ones(Float64,res)*transpose(linspace(-1.0,1.0,res))
@@ -107,18 +107,18 @@ function plotidx(idx::RefractiveIndex;axes=plt.gca())
     thetas::Array{Float64,2} = atan2(y,x)
     n::Array{Float64,2} = nfunc(idx,rs,thetas)
     
-    plt.contourf(x,y,n,100,cmap="bone_r",axes=axes)
-    contobj = plt.contour(x,y,n,100,cmap="bone_r",alpha=0.2,axes=axes)
+    plt[:contourf](x,y,n,100,cmap="bone_r",axes=axes)
+    contobj = plt[:contour](x,y,n,100,cmap="bone_r",alpha=0.2,axes=axes)
     levels = contobj[:levels][1:10:end]
-    plt.clabel(contobj,levels,colors="k")
-    plt.title("Plot of $idx")
+    plt[:clabel](contobj,levels,colors="k")
+    plt[:title]("Plot of $idx")
     return nothing
 end
 
 
 #Draw rays
-function plotrays(raypath::Array{Float64,2};axes=plt.gca())
-    return plt.plot(raypath[:,1].*cos(raypath[:,2]),raypath[:,1].*sin(raypath[:,2]),"y-",lw=0.4,aa=false,axes=axes)[1]
+function plotrays(raypath::Array{Float64,2};axes=plt[:gca]())
+    return plt[:plot](raypath[:,1].*cos(raypath[:,2]),raypath[:,1].*sin(raypath[:,2]),"y-",lw=0.4,aa=false,axes=axes)[1]
 end
 
 
@@ -143,17 +143,17 @@ function writecavityimg(resultsdir::AbstractString,bnd::Boundary,idx::Refractive
     
     #Plot boundary to obtain axis range
     plotbnd(bnd,axes=cavityplot)
-    range = [plt.axis()...]
+    range = [plt[:axis]()...]
     
     #Continue plotting if cavity image file does not already exist
     cavityimgfile = getcavityimgfile(resultsdir)
     if !isfile(cavityimgfile)
         #Plot index distribution
         plotidx(idx,bnd,axes=cavityplot)
-        plt.savefig(cavityimgfile)
+        plt[:savefig](cavityimgfile)
     end
     
-    plt.close()
+    plt[:close]()
     return range
 end
 
@@ -164,11 +164,11 @@ function writerayimg(resultsdir::AbstractString,resultid::Int64,raypath::Array{F
     
     #Plot
     rayline = plotrays(raypath,axes=rayplot)
-    plt.axis(range)
-    plt.axis("off")
+    plt[:axis](range)
+    plt[:axis]("off")
     
     #Save image
-    plt.savefig(getrayimgfile(resultsdir,resultid),transparent=true)
+    plt[:savefig](getrayimgfile(resultsdir,resultid),transparent=true)
     return rayline
 end
 
@@ -179,7 +179,7 @@ function writerayimg(resultsdir::AbstractString,resultid::Int64,raypath::Array{F
     rayline[:set_ydata](raypath[:,1].*sin(raypath[:,2]))
     
     #Save image
-    plt.savefig(getrayimgfile(resultsdir,resultid),transparent=true)
+    plt[:savefig](getrayimgfile(resultsdir,resultid),transparent=true)
     return nothing
 end
 

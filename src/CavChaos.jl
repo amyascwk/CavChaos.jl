@@ -6,9 +6,11 @@ module CavChaos
     
     #Pre-Julia v0.4.0 compatibility
     if VERSION < v"0.4-"
+        import Base.getindex
+        getindex(m::Module,s::Symbol) = m.(s)
         UInt64 = Uint64
         AbstractString = String
-        export UInt64, AbstractString
+        export UInt64, AbstractString, getindex
     else
         Union_type = Union
         Union(args...) = Union_type{args...}
