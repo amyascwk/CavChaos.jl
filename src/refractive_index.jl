@@ -39,9 +39,21 @@
 #Dependencies
 #require("util.jl")
 #require("boundary.jl")
+import Base: ==, hash
 
 #General index distribution type
 abstract RefractiveIndex
+
+
+# #############################################################################
+# #############################################################################
+#Hashing and equality
+
+#Extend base hash function with method to hash equivalent RefractiveIndex objects identically.
+hash(idx::RefractiveIndex) = fieldhashing(idx)
+
+#Equality is equality of type and field values
+==(idx1::RefractiveIndex,idx2::RefractiveIndex) = fieldequality(idx1,idx2)
 
 
 # #############################################################################

@@ -23,21 +23,6 @@
 #require("util.jl")
 #require("boundary.jl")
 #require("refractive_index.jl")
-import Base.hash
-
-
-# #############################################################################
-# #############################################################################
-#Hashing cavity objects
-
-#Extend base hash function with method to hash equivalent Boundary and RefractiveIndex objects identically.
-function hash(cavobj::Union(Boundary,RefractiveIndex))
-    infoarray = Any[summary(cavobj)]
-    for field in names(cavobj)
-        push!(infoarray,cavobj.(field))
-    end
-    return hash(infoarray)
-end
 
 
 # #############################################################################

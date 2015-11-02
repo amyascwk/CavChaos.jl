@@ -43,6 +43,7 @@
 
 #Dependencies
 #require("util.jl")
+import Base: ==, hash
 
 #General boundary type
 abstract Boundary
@@ -50,8 +51,18 @@ abstract Boundary
 
 # #############################################################################
 # #############################################################################
-#Functions for generic boundary
+#Hashing and equality
 
+#Extend base hash function with method to hash equivalent Boundary objects identically.
+hash(bnd::Boundary) = fieldhashing(bnd)
+
+#Equality is equality of type and field values
+==(bnd1::Boundary,bnd2::Boundary) = fieldequality(bnd1,bnd2)
+
+
+# #############################################################################
+# #############################################################################
+#Functions for generic boundary
 
 #These functions are vectorized versions of rfunc, rderiv and rderiv2 for a general Boundary, as well as (vectorized/in-place versions of) rsys for use in solving for the ray trajectories. The implementations for specific Boundary subtypes, if present, are slightly more efficient.
 
