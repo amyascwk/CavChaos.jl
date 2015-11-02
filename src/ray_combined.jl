@@ -201,6 +201,7 @@ function run_rays(  #Cavity parameters
                             record_pathlengths,record_actions,
                             record_modeproperties,record_farfield)
     const resultsdir::AbstractString = getresultsdir(run_params_hash,bnd,idx,resultsroot)
+    mkpath(resultsdir)
     
     #Write cavity image and get plot range
     if record_cavityimage

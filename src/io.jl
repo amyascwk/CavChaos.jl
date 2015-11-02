@@ -34,29 +34,19 @@
 #Get cavity-specific directory
 #Results directory is one more level deeper, separated by specific control file
 function getcavitydir(bnd::Boundary,idx::RefractiveIndex,resultsroot::AbstractString=".")
-    #Initiate cavity directory as module root directory
-    cavitydir::AbstractString = resultsroot
     #Get cavity constructor names
     cavitytype::AbstractString = @sprintf("%s_%s",
                                           replace("$(typeof(bnd))",r"^CavChaos\.",""),
                                           replace("$(typeof(idx))",r"^CavChaos\.",""))
     #Get hash of specific cavity with parameters
-    cavityhash = dec2base64(hash((bnd,idx)))
-    #Make path to cavity directory
-    for subdir::AbstractString in ["results",cavitytype,"cav"*cavityhash]
-        cavitydir = joinpath(cavitydir,subdir)
-        if !isdir(cavitydir); mkdir(cavitydir); end
-    end
-    return cavitydir
+    cavityhash = dec2base64(hash(hash(bnd),hash(idx)))
+    #Return path to cavity directory
+    return joinpath(resultsroot,"results",cavitytype,"cav"*cavityhash)
 end
 
 #Get run-specific directory
 function getresultsdir(run_params_hash::UInt64,bnd::Boundary,idx::RefractiveIndex,resultsroot::AbstractString=".";makedir::Bool=true)
-    #Get directory name
-    resultsdir::AbstractString = joinpath(getcavitydir(bnd,idx,resultsroot),"run"*dec2base64(run_params_hash))
-    #Make directory
-    if makedir && !isdir(resultsdir); mkdir(resultsdir); end
-    return resultsdir
+    return joinpath(getcavitydir(bnd,idx,resultsroot),"run"*dec2base64(run_params_hash))
 end
 
 
