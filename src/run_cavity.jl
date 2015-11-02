@@ -67,17 +67,17 @@
 
 #>> Results to record
 
-#   set_results!(;kwargs...)
+#   set_results_params!(;kwargs...)
 #   Sets the result represented by keywords to a boolean value associated to it in <kwargs>, indicating whether that result will be recorded. Appropriate keywords are: pssinitarray, initarray, initialconditions, raypath, bounceindices, bouncepoints, cavityimage, rayimage, pathlengths, actions, modeproperties, farfield.
 
-#   set_results!(args...)
-#   unset_results!(args...)
+#   set_results_params!(args...)
+#   unset_results_params!(args...)
 #   For a convenient syntax, if the above results keywords are passed as regular symbol or string arguments to set_results!, then they will be recorded. If passed to unset_results!, they will not.
 
-#   boolean = get_results(key::Union(AbstractString,Symbol))
+#   boolean = get_results_param(key::Union(AbstractString,Symbol))
 #   Returns whether the result represented by the keyword represented by the string or symbol <key> will be recorded.
 
-#Finally, the actual run is started by a call to the function runcavity().
+#Finally, the actual run is started by a call to the function run_cavity().
 
 
 # #############################################################################
@@ -172,9 +172,8 @@ function set_solver_params!(;kwargs...)
     return nothing
 end
 
-function get_solver_param(key::Union(AbstractString,Symbol))
-    return solver[symbol(key)]::Number
-end
+get_solver_param(key::Symbol) = solver[key]::Number
+get_solver_param(key::AbstractString) = solver[symbol(key)]::Number
 
 #Initial conditions parameters
 function set_init_params!(;kwargs...)
@@ -188,9 +187,8 @@ function set_init_params!(;kwargs...)
     return nothing
 end
 
-function get_init_param(key::Union(AbstractString,Symbol))
-    return init[symbol(key)]::Number
-end
+get_init_param(key::Symbol) = init[key]::Number
+get_init_param(key::AbstractString) = init[symbol(key)]::Number
 
 function set_pssinitarray!(A::Array{Float64,2})
     if size(A,2) != 2
@@ -247,19 +245,19 @@ function get_resultsdir()
                             get_solver_param(:maxbounces),
                             get_solver_param(:relativetolerance),
                             get_solver_param(:absolutetolerance),
-                            get_results(:pssinitarray),get_results(:initarray),
-                            get_results(:initialconditions),get_results(:raypath),
-                            get_results(:bounceindices),get_results(:bouncepoints),
-                            get_results(:cavityimage),get_results(:rayimage),
-                            get_results(:pathlengths),get_results(:actions),
-                            get_results(:modeproperties),get_results(:farfield))
+                            get_results_param(:pssinitarray),get_results_param(:initarray),
+                            get_results_param(:initialconditions),get_results_param(:raypath),
+                            get_results_param(:bounceindices),get_results_param(:bouncepoints),
+                            get_results_param(:cavityimage),get_results_param(:rayimage),
+                            get_results_param(:pathlengths),get_results_param(:actions),
+                            get_results_param(:modeproperties),get_results_param(:farfield))
     
     return getresultsdir(   run_params_hash,get_cavity_bnd(),get_cavity_idx(),
                             get_resultsroot(),makedir=false)
 end
 
 #Results parameters
-function set_results!(;kwargs...)
+function set_results_params!(;kwargs...)
     for i=1:length(kwargs)
         if haskey(results,kwargs[i][1])
             results[kwargs[i][1]] = kwargs[i][2]
@@ -270,17 +268,16 @@ function set_results!(;kwargs...)
     return nothing
 end
 
-function set_results!(args...)
+function set_results_params!(args...)
     set_results!(;[(symbol(arg),true) for arg in args]...)
 end
 
-function unset_results!(args...)
+function unset_results_params!(args...)
     set_results!(;[(symbol(arg),false) for arg in args]...)
 end
 
-function get_results(key::Union(AbstractString,Symbol))
-    return results[symbol(key)]::Bool
-end
+get_results_param(key::Symbol) = results[key]::Bool
+get_results_param(key::AbstractString) = results[symbol(key)]::Bool
 
 
 # #############################################################################
@@ -288,7 +285,7 @@ end
 #Main driver
 
 #Profile a single cavity by running multiple rays in it
-function runcavity()
+function run_cavity()
     
     run_rays(   #Cavity parameters
                 get_cavity_bnd(),get_cavity_idx();
@@ -312,18 +309,18 @@ function runcavity()
                 resultsroot = get_resultsroot(),
                 
                 #Results to record
-                record_pssinitarray = get_results(:pssinitarray),
-                record_initarray = get_results(:initarray),
-                record_initialconditions = get_results(:initialconditions),
-                record_raypath = get_results(:raypath),
-                record_bounceindices = get_results(:bounceindices),
-                record_bouncepoints = get_results(:bouncepoints),
-                record_cavityimage = get_results(:cavityimage),
-                record_rayimage = get_results(:rayimage),
-                record_pathlengths = get_results(:pathlengths),
-                record_actions = get_results(:actions),
-                record_modeproperties = get_results(:modeproperties),
-                record_farfield = get_results(:farfield),
+                record_pssinitarray = get_results_param(:pssinitarray),
+                record_initarray = get_results_param(:initarray),
+                record_initialconditions = get_results_param(:initialconditions),
+                record_raypath = get_results_param(:raypath),
+                record_bounceindices = get_results_param(:bounceindices),
+                record_bouncepoints = get_results_param(:bouncepoints),
+                record_cavityimage = get_results_param(:cavityimage),
+                record_rayimage = get_results_param(:rayimage),
+                record_pathlengths = get_results_param(:pathlengths),
+                record_actions = get_results_param(:actions),
+                record_modeproperties = get_results_param(:modeproperties),
+                record_farfield = get_results_param(:farfield),
             )
     
 end

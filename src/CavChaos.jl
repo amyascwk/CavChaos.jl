@@ -29,10 +29,6 @@ module CavChaos
         fieldnames = names
         
         export UInt64, AbstractString, fieldnames
-    else
-        import Base.call
-        typealias UnionType Union
-        call(::Type{Union},args...) = UnionType{args...}
     end
     
     
@@ -94,8 +90,8 @@ module CavChaos
     export set_init_params!, get_init_param
     export set_pssinitarray!, get_pssinitarray, set_initarray!, get_initarray
     export set_resultsroot!, get_resultsroot, get_resultsdir
-    export set_results!, unset_results!, get_results
-    export runcavity
+    export set_results_params!, unset_results_params!, get_results_param
+    export run_cavity
     
     
     # #########################################################################
