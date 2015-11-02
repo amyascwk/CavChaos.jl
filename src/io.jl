@@ -7,9 +7,10 @@
 #   resultsdir = getresultsdir(simulation_params_hash::AbstractString,bnd::Boundary,idx::RefractiveIndex,resultsroot::AbstractString=".")
 #   Returns the path <resultsdir> (as a subdirectory of <resultsroot>) to the uniquely assigned directory location for storing results of the simulation with parameters represented by the hash <simulation_params_hash>, for the cavity with boundary <bnd> and index distribution <idx>. Makes nonexisting directories via mkdir() whenever appropriate.
 
-#   writeresults(resultsdir::AbstractString,resultid::Int64, [label1::AbstractString,data1,[label2::AbstractString,data2,[...]]])
+#   writeresults(resultsdir::AbstractString,resultid::Int64, label::AbstractString,data::Array)
+#   writeresults(resultsdir::AbstractString,resultid::Int64, [label1::AbstractString,data1::Union{Integer,AbstractFloat},[label2::AbstractString,data2::Union{Integer,AbstractFloat},[...]]])
 #   Writes the results corresponding to the <resultid>th computation of a specified simulation run, into files at the directory location <resultsdir> (as a subdirectory of <resultsroot>). For each label-data pair (<label>,<data>) in the variable argument list, the data are stored in appropriate formats (csv files) depending on their type, and systematically associated with their corresponding labels for later retrieval.
-#   If multiple label-data argument pairs are present, either the data must all be of array-type, which are then each stored in individual files, or the data must all NOT be of array-type, and they are combined into a single file and identified by their position in the order. This is to reduce the clutter of multiple result files with only a single value stored in each.
+#   If multiple label-data argument pairs are present, either the data must all be of Integer or AbstractFloat types, so that they can be combined into a single file and identified by their position in the order. This is meant to reduce the clutter of multiple result files with only a single value stored in each. In other words, each call to writeresults should correspond to 1 result file (or directory for 3D and higher arrays).
 
 #   data = readresults(resultsdir::AbstractString,resultid::Int64,label::AbstractString, T::Type=Float64)
 #   Extracts the recorded data <data> associated to the label <label> for the <resultid>th computation of a specified simulation run, and stored in the directory <resultsdir>. If <data> is of type Number, attempts to reinterpret it as the type <T>.
@@ -55,8 +56,8 @@ end
 #Result file naming conventions
 
 #Combine labels for multiple (nonarray) data in a single file
-function combinelabels(label::AbstractString,labels...)
-    return label*"_"*combinelabels(labels...)::AbstractString
+function combinelabels(labels...)
+    return join(labels,"_")::AbstractString
 end
 
 #Split combined label into array of labels
@@ -97,51 +98,45 @@ end
 # #############################################################################
 #Result file I/O
 
-#Write results for different types of data, with specified associated labels
+#Write results for array data, with specified associated labels
 #Data labels should not include '_' or '.', since these are used as separators of multiple data
-
-#>> Do nothing in empty case
-writeresults(resultsdir::AbstractString,resultid::Int64) = nothing
-
-#>> Write arrays directly
-#   (1D and 2D case)
-function writeresults{T}(resultsdir::AbstractString,resultid::Int64,label::AbstractString,data::Union(Array{T,1},Array{T,2}),args...)
-    #single csv file suffices for 1D or 2D arrays
-    resultfile::AbstractString = joinpath(resultsdir,getresultfname(resultid,label)*".dat")
-    writecsv(resultfile,data)
-    #Continue with other label-data argument pairs
-    writeresults(resultsdir,resultid,args...)
-end
-
-#   (N dimensional case)
-function writeresults{T,N}(resultsdir::AbstractString,resultid::Int64,label::AbstractString,data::Array{T,N},args...)
-    #this is run when N>2
-    #need multiple files so store them in a directory
-    resultdir::AbstractString = joinpath(resultsdir,getresultfname(resultid,label))
-    mkdir(resultdir)
-    datasizeN::Int64 = size(data,N)
-    numberofdigits::Int64 = floor(log10(datasizeN))+1
-    newdims = size(data)[1:end-1]
-    for i=1:datasizeN
-        #Recursively write results for each slice of data along the last dimension
-        writeresults(resultdir,resultid,
-                    #page labelling order will be opposite of dimension order
-                    label*"."*dec(i,numberofdigits), 
-                    #the slice reshaped to (N-1)-dimensions
-                    reshape(slicedim(data,N,i),newdims))
+function writeresults{T,N}(resultsdir::AbstractString,resultid::Int64,label::AbstractString,data::Array{T,N})
+    if N <= 2
+        #1D and 2D case
+        #single csv file suffices for 1D or 2D arrays
+        resultfile::AbstractString = joinpath(resultsdir,getresultfname(resultid,label)*".dat")
+        writecsv(resultfile,data)
+    else
+        #3D and above case
+        #need multiple files so store them in a directory
+        resultdir::AbstractString = joinpath(resultsdir,getresultfname(resultid,label))
+        mkdir(resultdir)
+        datasizeN::Int64 = size(data,N)
+        numberofdigits::Int64 = floor(log10(datasizeN))+1
+        newdims = size(data)[1:end-1]
+        for i=1:datasizeN
+            #Recursively write results for each slice of data along the last dimension
+            writeresults(resultdir,resultid,
+                         #page labelling order will be opposite of dimension order
+                         label*"."*dec(i,numberofdigits),
+                         #the slice reshaped to (N-1)-dimensions
+                         reshape(slicedim(data,N,i),newdims))
+        end
     end
-    #Continue with other label-data argument pairs
-    writeresults(resultsdir,resultid,args...)
 end
 
-#>> Combine non-arrays into a single file
-#   (assumes that all data arguments are non-arrays)
+#Combine multiple single numerical data in a single file
 function writeresults(resultsdir::AbstractString,resultid::Int64,args...)
-    data_array::Array{Any,1} = [args[2:2:end]...]
-    for item in data_array
-        assert(!(typeof(item) <: Array))
+    if !isempty(args)
+        #Check arguments
+        if isodd(length(args)); error("Argument list must contain label and data pairs."); end
+        if !all(x -> typeof(x) <: Integer || typeof(x) <: AbstractFloat,
+                args[2:2:end])
+            error("Data types not suitable for recording in csv format. Only Integers and AbstractFloats accepted.")
+        end
+        #Write data
+        writeresults(resultsdir,resultid,combinelabels(args[1:2:end]...),[args[2:2:end]...])
     end
-    writeresults(resultsdir,resultid,combinelabels(args[1:2:end]...),data_array)
 end
 
 #Read results

@@ -12,6 +12,7 @@ module CavChaos
 
         #New type names
         typealias UInt64 Uint64
+        typealias AbstractFloat FloatingPoint
         typealias AbstractString String
 
         #Rounding function replacements
