@@ -6,8 +6,8 @@
 
 #Finding the order of periodicity of a series of bounces from their positions on the PSS is a constrained clustering problem, where the data is already ordered such that the clusters are sampled periodically, so points from the same cluster are separated by uniform intervals equal to the number of clusters.
 
-#   clustcount,clustsepmean = findcluster(bncpts::Array{Float64,2};threshhold::Float64=0.1,samplesize::Int64=30)
-#   This function estimates the number of clusters in the sequence <bncpts> of (theta,chi) bouncepoint locations on the Poincare Surface of Section, but averaging the pairwise distances of <samplesize> bouncepoints separated by a fixed interval in the sequence, and finding the highest interval for which there is a sharp drop in average distance to a proportion below <threshhold>.
+#   clustcount,clustsepmean = findcluster(bncpts::Array{Float64,2};threshhold::Float64=0.1,samplesize::Int64=30,maxtestinterval::Int64=0)
+#   This function estimates the number of clusters in the sequence <bncpts> of (theta,chi) bouncepoint locations on the Poincare Surface of Section, but averaging the pairwise distances of <samplesize> bouncepoints separated by a fixed interval in the sequence, and finding the highest interval not exceeding <maxtestinterval> (no limit if set to 0) for which there is a sharp drop in average distance to a proportion below <threshhold>. 
 #   The number <clustcount> of clusters and the associated mean separation <clustsepmean> of points within each cluster are returned. If no clear indication of clustering is found (no drop in mean intra-cluster separation below threshhold), then <clustcount> is set to 1.
 
 
@@ -35,8 +35,8 @@ function chi2whisporder(chi::Float64)
 end
 
 #Metric on the PSS
-#Treats (theta,chi) pairs as positions on an infinite cylinder embedded in R^3,
-#theta being the angular position and tan(chi) being the vertical position.
+#Treats (theta,chi) pairs as positions on a half-infinite cylinder embedded in R^3,
+#theta being the angular position and chi2whisporder(chi) being the vertical position.
 function pssmetric(theta1::Float64,theta2::Float64,chi1::Float64,chi2::Float64)
     return hypot(2*sin(0.5*(theta1-theta2)),
                  chi2whisporder(chi1)-chi2whisporder(chi2))::Float64
