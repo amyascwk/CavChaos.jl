@@ -5,7 +5,7 @@
 
 #Small nonnegative integer powers implemented in GSL
 function gsl_pow_int(x::Float64,n::Int64)
-    return ccall((:gsl_pow_int,"libgsl"),Cdouble,(Cdouble,Cint),x,int32(n))
+    return ccall((:gsl_pow_int,"libgsl"),Cdouble,(Cdouble,Cint),x,convert(Int32,n))
 end
 
 #Squares and cubes are more common, simply implemented directly in Julia with shorter names, and also vectorized
@@ -38,9 +38,5 @@ function coeffmatrix{T}(m::Array{T,2})
     else
         return full(sparse(I,J,V))
     end
-end
-
-function donothing(a,b)
-    return nothing
 end
 

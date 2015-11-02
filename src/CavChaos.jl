@@ -6,15 +6,32 @@ module CavChaos
     
     #Pre-Julia v0.4.0 compatibility
     if VERSION < v"0.4-"
+        #Getting PyPlot functions to work using plt[:func] syntax
         import Base.getindex
         getindex(m::Module,s::Symbol) = m.(s)
-        UInt64 = Uint64
-        AbstractString = String
-        export UInt64, AbstractString, getindex
+
+        #New type names
+        typealias UInt64 Uint64
+        typealias AbstractString String
+
+        #Rounding function replacements
+        import Base.ceil
+        ceil(T::DataType,x::Integer) = convert(T,ceil(x))
+        ceil(T::DataType,x::Integer,y::Integer) = convert(T,ceil(x,y))
+        ceil(T::DataType,args...) = convert(T,ceil(args...))
+        function cld{T1<:Real,T2<:Real}(x::T1,y::T2)
+            d,v = divrem(x,y)
+            return (v <= 0) ? d : d + 1
+        end
+        
+        #Introspection
+        fieldnames = names
+        
+        export UInt64, AbstractString, fieldnames
     else
-        Union_type = Union
-        Union(args...) = Union_type{args...}
-        export Union
+        import Base.call
+        typealias UnionType Union
+        call(::Type{Union},args...) = UnionType{args...}
     end
     
     
@@ -37,7 +54,6 @@ module CavChaos
     
     #I/O functions for recording results
     include("io.jl")
-    export hash
     export getresultsdir
     export writeresults, readresults
     export collectresultids
@@ -50,6 +66,10 @@ module CavChaos
     #C code in ray.c
     include("ray_solver.jl")
     export rayevolve_gsl
+    
+    #Clustering algorithm (specific to periodic points on PSS)
+    include("clustering.jl")
+    export findcluster
     
     #Coprocessing functions for analyzing ray data during simulation run,
     #(before recording results)
@@ -79,10 +99,6 @@ module CavChaos
     
     # #########################################################################
     #Mode-finding layer
-    
-    #Clustering algorithm (specific to periodic points on PSS)
-    include("clustering.jl")
-    export findcluster
     
     #PSS plotting and image I/O functions
     include("mode_plot.jl")

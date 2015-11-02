@@ -47,7 +47,7 @@ function findmode_gsl(bnd::Boundary,idx::RefractiveIndex,init::Array{Float64,1},
         bnd,rfunc_p,rsys!_p,idx,nfunc_p,nderiv!_p) #Cavity parameters
     
     #Return NaN on abortions or false positives (almost identical points at high chi)
-    if (int64(status) == 1) || (var(modebounces[1:order]) < 1e-3)
+    if (status == 1) || (var(modebounces[1:order]) < 1e-3)
         return nans(1,1)::Array{Float64,2}
     end
     

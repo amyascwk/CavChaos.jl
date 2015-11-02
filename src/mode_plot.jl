@@ -30,7 +30,7 @@ function getbinindex(pos::Float64,min::Float64,max::Float64,res::Int64)
     else
         #Return the bin number containing pos, if there are res bins between
         #min and max
-        return int64(div(res*(pos-min),max-min))+1
+        return convert(Int64,cld(res*(pos-min),max-min))
     end
 end
 
@@ -101,18 +101,7 @@ function plotpss(resultsdir::AbstractString;axes=plt[:gca](),range::Array{Float6
     plt[:xlabel]("Polar Angle \$\\theta\$")
     plt[:ylabel]("Angle of Incidence \$\\chi\$")
 
-    return residarray
-end
-
-
-# #############################################################################
-# #############################################################################
-#Interactive PSS plot
-
-#Plot PSS with interactive features
-function plotpss_interactive(resultsdir::AbstractString;kwargs...)
-    residarray::Array{Int64,2} = plotpss(resultsdir;kwargs...)
-    
+    return pssarray,residarray
 end
 
 

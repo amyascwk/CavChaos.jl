@@ -73,7 +73,7 @@
 #Automatically generates an array of (theta,chi) pairs as rows, that covers as much of the Poincare Surface of Section plot up to a specified rotational symmetry.
 function gen_pssinitarray(thetares::Int64=25,chires::Int64=25,symmetry::Int64=1)
     #Choose total number of points (see explanation below)
-    interval::Int64 = int64(ceil(sqrt(thetares*chires)))
+    interval::Int64 = ceil(Int64,sqrt(thetares*chires))
     N::Int64 = interval^2+3
     while gcd(interval,N) != 1
         N += 1
@@ -290,7 +290,7 @@ function run_rays(  #Cavity parameters
     end
     
     #End
-    plt.close()
+    plt[:close]()
     println("Cavity analyzed in $(toq()) seconds.")
     
     return resultsdir

@@ -73,7 +73,7 @@ function rayevolve_gsl(bnd::Boundary,idx::RefractiveIndex,init::Array{Float64,1}
     
     #Preallocate results arrays -----------------------------------------------
     #Estimate length required
-    const prealloc::Int64 = int64(250*ceil(tmax)) #Length to preallocate raypath array
+    const prealloc::Int64 = 250*ceil(Int64,tmax) #Length to preallocate raypath array
     #Initialize arrays for the 1st and 2nd columns of raypath matrix storing 
     #(r,theta) positions along the path of the ray as rows
     raypath_r::Array{Float64,1} = Array(Float64,prealloc) #raypath r value

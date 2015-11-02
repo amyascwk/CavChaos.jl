@@ -52,7 +52,9 @@ function getcavitydir(bnd::Boundary,idx::RefractiveIndex,resultsroot::AbstractSt
     #Initiate cavity directory as module root directory
     cavitydir::AbstractString = resultsroot
     #Get cavity constructor names
-    cavitytype::AbstractString = @sprintf("%s_%s",summary(bnd),summary(idx))
+    cavitytype::AbstractString = @sprintf("%s_%s",
+                                          replace("$(typeof(bnd))",r"^CavChaos\.",""),
+                                          replace("$(typeof(idx))",r"^CavChaos\.",""))
     #Get hash of specific cavity with parameters
     cavityhash = dec2base64(hash((bnd,idx)))
     #Make path to cavity directory
@@ -98,7 +100,7 @@ function splitresultfname(fname::AbstractString)
     noextfname::AbstractString = splitext(fname)[1]
     #Check if datafile filename has a resultid at the start
     if ismatch(Regex("^\\d{6}_"),fname)
-        return int64(noextfname[1:6]), splitlabel(noextfname[8:end])
+        return parse(noextfname[1:6]), splitlabel(noextfname[8:end])
     else
         return 0, splitlabel(noextfname)
     end
