@@ -40,7 +40,7 @@ function getcavitydir(bnd::Boundary,idx::RefractiveIndex,resultsroot::AbstractSt
                                           replace("$(typeof(bnd))",r"^CavChaos\.",""),
                                           replace("$(typeof(idx))",r"^CavChaos\.",""))
     #Get hash of specific cavity with parameters
-    cavityhash = dec2base64(hash(hash(bnd),hash(idx)))
+    cavityhash = dec2base64(hash(bnd,hash(idx)))
     #Return path to cavity directory
     return joinpath(resultsroot,"results",cavitytype,"cav"*cavityhash)
 end

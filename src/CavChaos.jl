@@ -27,6 +27,10 @@ module CavChaos
         
         #Introspection
         fieldnames = names
+
+        #Hashing
+        import Base.hash
+        hash(h1::UInt64,h2::UInt64) = hash((h1,h2))
         
         export UInt64, AbstractString, fieldnames
     end

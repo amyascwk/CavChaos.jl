@@ -51,6 +51,7 @@ abstract RefractiveIndex
 
 #Extend base hash function with method to hash equivalent RefractiveIndex objects identically.
 hash(idx::RefractiveIndex) = fieldhashing(idx)
+hash(idx::RefractiveIndex,h::UInt64) = hash(hash(idx),h)
 
 #Equality is equality of type and field values
 ==(idx1::RefractiveIndex,idx2::RefractiveIndex) = fieldequality(idx1,idx2)

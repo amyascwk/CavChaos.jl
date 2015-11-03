@@ -55,6 +55,7 @@ abstract Boundary
 
 #Extend base hash function with method to hash equivalent Boundary objects identically.
 hash(bnd::Boundary) = fieldhashing(bnd)
+hash(bnd::Boundary,h::UInt64) = hash(hash(bnd),h)
 
 #Equality is equality of type and field values
 ==(bnd1::Boundary,bnd2::Boundary) = fieldequality(bnd1,bnd2)
